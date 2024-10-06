@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "llm-agent-project"
+version = "0.1.0"
+description = ""
+authors = ["Konstantin.Grotov <konstantin.grotov@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langgraph = "^0.2.34"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+
+
+[tool.poetry.group.research.dependencies]
+jupyter = "^1.1.1"
+notebook = "^7.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
