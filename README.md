@@ -54,7 +54,7 @@ Ivan is useful for a variety of financial management activities:
 
 ## Installation
 
-1. Clone the repository:
+1. Clone the repository.
 
 2. Install dependencies:
 
