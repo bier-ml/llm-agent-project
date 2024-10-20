@@ -18,25 +18,19 @@ informed recommendations.
 
 ## Features
 
-1. Portfolio Management
-   IVAN offers comprehensive tools to manage your financial portfolios:
-
-    - **Profile Creation**: Create and update user portfolio profiles.
-    - **Performance Visualization**: Visualize the performance of each asset in the portfolio.
-
-2. Performance Analysis
+1. Performance Analysis
    The agent provides automatic analysis to keep you informed:
 
     - **Market Trends**: Analyze market trends and movements.
     - **News Integration**: Integrate and analyze relevant news affecting stocks and cryptocurrencies.
 
-3. Personalized Recommendations
+2. Personalized Recommendations
    IVAN delivers tailored investment strategies:
 
     - **Investment Plans**: Generate personalized investment plans.
     - **Adjustments Suggestions**: Offer suggestions based on performance analytics.
 
-4. Communication Support
+3. Communication Support
    Stay updated with automated notifications:
 
     - **Routine Updates**: Automate routine updates and notifications to the user.
