@@ -1,4 +1,4 @@
-from typing import Any, Dict, Protocol
+from typing import Any, Dict, Optional, Protocol
 
 from pydantic import BaseModel
 
@@ -7,6 +7,8 @@ class Message(BaseModel):
     """Represents a message to be processed"""
 
     content: str
+    user_id: str
+    llm_type: Optional[str] = None
     metadata: Dict[str, Any] = {}
 
 
