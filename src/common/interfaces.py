@@ -16,3 +16,10 @@ class MessageProcessor(Protocol):
     async def process_message(self, message: Message) -> Dict[str, Any]:
         """Process a message and return a response"""
         ...
+
+class ServiceConnector(Protocol):
+    """Protocol defining the interface for service connections"""
+
+    async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Send a request to a service endpoint"""
+        ...
