@@ -4,7 +4,7 @@ from typing import Any, Dict
 from fastapi import FastAPI, HTTPException
 
 from src.client.services import AgentServiceConnector, ToolCallHandler
-from src.common.interfaces import Message, MessageProcessor
+from src.common.interfaces import Message
 
 app = FastAPI()
 

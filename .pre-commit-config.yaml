@@ -4,7 +4,7 @@ repos:
     -   id: ruff
         name: ruff
         description: Format the code
-        entry: poetry run ruff format .
+        entry: bash -c 'poetry run ruff format . && poetry run ruff check . --fix'
         pass_filenames: false # run once per commit rather than file
         language: system
     -   id: sort-imports

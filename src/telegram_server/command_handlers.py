@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict
+from typing import Callable, Dict
 
 from telegram import Update
 from telegram.ext import ContextTypes
