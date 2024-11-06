@@ -23,5 +23,9 @@ agent_service = AgentService()
 async def process_message(message: Message):
     try:
         return await agent_service.process_message(message)
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail="Unable to connect to LLM service")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

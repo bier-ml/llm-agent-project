@@ -17,6 +17,7 @@ class MessageProcessor(Protocol):
         """Process a message and return a response"""
         ...
 
+
 class ServiceConnector(Protocol):
     """Protocol defining the interface for service connections"""
 

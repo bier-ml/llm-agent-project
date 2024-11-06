@@ -14,6 +14,6 @@ fi
 
 # Build the images
 echo "🔨 Building Docker images..."
-docker-compose build --no-cache
+docker compose build --no-cache
 
 echo "✅ Build completed successfully!" 

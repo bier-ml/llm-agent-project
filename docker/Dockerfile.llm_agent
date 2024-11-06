@@ -20,5 +20,8 @@ RUN poetry config virtualenvs.create false \
 # Copy source code
 COPY src/ /app/src/
 
+# Set environment variables with defaults
+ENV LMSTUDIO_API_URL=http://host.docker.internal:1234/v1
+
 # Run the FastAPI application
 CMD ["uvicorn", "src.agent.run:app", "--host", "0.0.0.0", "--port", "8001"] 
