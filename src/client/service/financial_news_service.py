@@ -5,7 +5,11 @@ from newsapi import NewsApiClient
 
 
 class FinancialNewsService:
-    def __init__(self, api_key):
+    def __init__(self):
+        load_dotenv()
+        api_key = os.getenv("NEWSAPI_KEY")
+        if not api_key:
+            raise ValueError("NEWSAPI_KEY environment variable is not set")
         self.api = NewsApiClient(api_key=api_key)
 
     def get_financial_news(
