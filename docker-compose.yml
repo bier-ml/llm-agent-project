@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  telegram_bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.telegram_bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - CLIENT_SERVICE_URL=http://client_api:8000
+    depends_on:
+      - client_api
+    networks:
+      - ivan_network
+    restart: unless-stopped
+
+  client_api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.client_api
+    environment:
+      - AGENT_SERVICE_URL=http://llm_agent:8001
+    ports:
+      - "8000:8000"
+    depends_on:
+      - llm_agent
+    networks:
+      - ivan_network
+    restart: unless-stopped
+
+  llm_agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.llm_agent
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8001:8001"
+    networks:
+      - ivan_network
+    restart: unless-stopped
+
+networks:
+  ivan_network:
+    driver: bridge 

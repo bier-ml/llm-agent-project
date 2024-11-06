@@ -1,20 +1,37 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import os
+from typing import Any, Dict
+
+from fastapi import FastAPI, HTTPException
+
+from src.client.services import AgentServiceConnector, ToolCallHandler
+from src.common.interfaces import Message, MessageProcessor
 
 app = FastAPI()
 
 
-class UserInput(BaseModel):
-    user_input: str
+class ClientService:
+    def __init__(self):
+        self.agent_connector = AgentServiceConnector(
+            base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001")
+        )
+        self.tool_handler = ToolCallHandler()
+
+    async def process_message(self, message: Message) -> Dict[str, Any]:
+        return await self.agent_connector.send_request("process", message.__dict__)
 
 
-@app.get("/get-input")
-def get_input():
-    user_input = input("Please enter something: ")
-    return {"user_input": user_input}
+client_service = ClientService()
 
 
-if __name__ == "__main__":
-    import uvicorn
+@app.post("/process_message")
+async def process_message(message: Message):
+    try:
+        response = await client_service.process_message(message)
+        return {"message": response["message"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+
+@app.post("/tool_call")
+async def handle_tool_call(tool_call: Dict[str, Any]):
+    return await client_service.tool_handler.handle(tool_call)

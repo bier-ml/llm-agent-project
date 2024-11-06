@@ -1,43 +1,55 @@
 import os
+from typing import Any, Dict
 
-import telebot
-from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
-from client.service.coin_price_service import CoinPriceService
-
-load_dotenv()
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
-
-
-@bot.message_handler(commands=["help", "start"])
-def send_welcome(message):
-    bot.reply_to(
-        message, "Hello! Use /price <id> to get daily price data, e.g., /price hamster"
-    )
+from src.common.interfaces import Message, ServiceConnector
+from src.telegram_server.command_handlers import CommandRegistry
+from src.telegram_server.connectors import ClientServiceConnector
 
 
-@bot.message_handler(commands=["price"])
-def send_price(message):
-    try:
-        id = message.text.split()[1].lower()
-    except IndexError:
-        bot.reply_to(
-            message, "Please specify a cryptocurrency id, e.g., /price hamster."
+class IvanTelegramBot:
+    def __init__(self):
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN")
+        self.connector: ServiceConnector = ClientServiceConnector(
+            base_url=os.getenv("CLIENT_SERVICE_URL", "http://client:8000")
         )
-        return
+        self.command_registry = CommandRegistry(self.connector)
 
-    days = 7  # Fetch data for the past 7 days
-    coin_service = CoinPriceService()
-    df = coin_service.get_coin_price_history(id, days=days)
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        message = Message(
+            user_id=update.effective_user.id,
+            content=update.message.text,
+            metadata={"chat_id": update.effective_chat.id},
+        )
+        response = await self.connector.send_request(
+            "process_message", message.__dict__
+        )
+        await update.message.reply_text(response["message"])
 
-    if df is not None:
-        prices_text = df["price"].tail(days).to_string()
-        bot.reply_to(message, f"Daily prices for {id}:\n{prices_text}")
-    else:
-        bot.reply_to(message, f"Could not retrieve data for {id}. Please try again.")
+    def setup_handlers(self, app: Application):
+        # Register command handlers
+        for command, handler in self.command_registry.get_handlers().items():
+            app.add_handler(CommandHandler(command, handler))
+
+        # Register message handler
+        app.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
+        )
+
+    def run(self):
+        app = Application.builder().token(self.token).build()
+        self.setup_handlers(app)
+        app.run_polling()
 
 
 if __name__ == "__main__":
-    bot.infinity_polling()
+    bot = IvanTelegramBot()
+    bot.run()
