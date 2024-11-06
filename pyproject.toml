@@ -13,10 +13,14 @@ python = "^3.11"
 langgraph = "^0.2.34"
 setuptools = "^75.1.0"
 buildtools = "^1.0.6"
+newsapi-python = "^0.2.7"
+pandas = "^2.2.3"
+pytelegrambotapi = "^4.23.0"
 
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.9"
+pre-commit = "^4.0.1"
 
 
 [tool.poetry.group.research.dependencies]
