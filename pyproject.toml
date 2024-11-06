@@ -26,6 +26,8 @@ httpx = "^0.25.1"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.9"
 pre-commit = "^4.0.1"
+pytest = "^8.3.3"
+pytest-asyncio = "^0.24.0"
 
 
 [tool.poetry.group.research.dependencies]

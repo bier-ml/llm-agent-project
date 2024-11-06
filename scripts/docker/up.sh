@@ -13,16 +13,16 @@ fi
 
 # Start services
 echo "📦 Starting Docker containers..."
-docker-compose up -d
+docker compose up -d
 
 echo "🔍 Checking service health..."
 sleep 5
 
 # Check if services are running
-if docker-compose ps | grep -q "Up"; then
+if docker compose ps | grep -q "Up"; then
     echo "✅ Services are running!"
-    echo "📝 Logs can be viewed with: docker-compose logs -f"
+    echo "📝 Logs can be viewed with: docker compose logs -f"
 else
-    echo "❌ Some services failed to start. Check logs with: docker-compose logs"
+    echo "❌ Some services failed to start. Check logs with: docker compose logs"
     exit 1
 fi 
