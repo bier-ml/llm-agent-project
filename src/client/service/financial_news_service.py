@@ -1,13 +1,24 @@
 import os
 
-from newsapi import NewsApiClient
 from dotenv import load_dotenv
+from newsapi import NewsApiClient
+
 
 class FinancialNewsService:
-    def __init__(self, api_key):
+    def __init__(self):
+        load_dotenv()
+        api_key = os.getenv("NEWSAPI_KEY")
+        if not api_key:
+            raise ValueError("NEWSAPI_KEY environment variable is not set")
         self.api = NewsApiClient(api_key=api_key)
 
-    def get_financial_news(self, keywords='stock OR crypto', language='en', sort_by='relevancy', page_size=5):
+    def get_financial_news(
+        self,
+        keywords="stock OR crypto",
+        language="en",
+        sort_by="relevancy",
+        page_size=5,
+    ):
         """
         Fetch financial news using the NewsAPI 'everything' endpoint.
 
@@ -22,14 +33,11 @@ class FinancialNewsService:
         """
         try:
             response = self.api.get_everything(
-                q=keywords,
-                language=language,
-                sort_by=sort_by,
-                page_size=page_size
+                q=keywords, language=language, sort_by=sort_by, page_size=page_size
             )
 
-            if response['status'] == 'ok':
-                return response['articles']
+            if response["status"] == "ok":
+                return response["articles"]
             else:
                 print(f"Error fetching news: {response['status']}")
                 return []
@@ -48,14 +56,15 @@ class FinancialNewsService:
             print(f"{idx}. {article['title']}")
             print(f"   {article['description']}")
             print(f"   Content: {article['content']}")
-            print('-' * 80)
+            print("-" * 80)
+
 
 # Usage Example
 if __name__ == "__main__":
     load_dotenv()
 
     # Your NewsAPI key here
-    api_key = os.getenv('NEWSAPI_KEY')
+    api_key = os.getenv("NEWSAPI_KEY")
 
     # Initialize the FinancialNewsClient with the API key
     news_client = FinancialNewsService(api_key=api_key)

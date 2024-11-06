@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install poetry
+RUN pip install poetry
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock ./
+COPY .env ./
+
+# Configure poetry and install dependencies
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi
+
+# Copy source code
+COPY src/ /app/src/
+
+# Run the FastAPI application
+CMD ["uvicorn", "src.client.app:app", "--host", "0.0.0.0", "--port", "8000"] 
