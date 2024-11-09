@@ -16,7 +16,7 @@ class IvanTelegramBot:
     def __init__(self):
         load_dotenv()
 
-        self.token = os.getenv("TELEGRAM_TOKEN")
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.connector = ClientServiceConnector(
             base_url=os.getenv("CLIENT_SERVICE_URL", "http://client:8000")
         )
