@@ -1,37 +1,31 @@
 import os
-
-from telegram import Update
+from dotenv import load_dotenv
 from telegram.ext import (
     Application,
     CommandHandler,
-    ContextTypes,
-    MessageHandler,
+    MessageHandler as TelegramMessageHandler,
     filters,
 )
 
-from src.common.interfaces import Message, ServiceConnector
 from src.telegram_server.command_handlers import CommandRegistry
 from src.telegram_server.connectors import ClientServiceConnector
+from src.telegram_server.message_handler import MessageHandler
 
 
 class IvanTelegramBot:
     def __init__(self):
-        self.token = os.getenv("TELEGRAM_BOT_TOKEN")
-        self.connector: ServiceConnector = ClientServiceConnector(
+        load_dotenv()
+
+        self.token = os.getenv("TELEGRAM_TOKEN")
+        self.connector = ClientServiceConnector(
             base_url=os.getenv("CLIENT_SERVICE_URL", "http://client:8000")
         )
         self.command_registry = CommandRegistry(self.connector)
+        self.message_handler = MessageHandler(self.connector, self.command_registry)
 
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        message = Message(
-            user_id=update.effective_user.id,
-            content=update.message.text,
-            metadata={"chat_id": update.effective_chat.id},
-        )
-        response = await self.connector.send_request(
-            "process_message", message.__dict__
-        )
-        await update.message.reply_text(response["message"])
+    async def post_init(self, application: Application):
+        """Post initialization hook to setup bot commands"""
+        await self.command_registry.setup_commands(application)
 
     def setup_handlers(self, app: Application):
         # Register command handlers
@@ -40,11 +34,13 @@ class IvanTelegramBot:
 
         # Register message handler
         app.add_handler(
-            MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
+            TelegramMessageHandler(
+                filters.TEXT & ~filters.COMMAND, self.message_handler.handle
+            )
         )
 
     def run(self):
-        app = Application.builder().token(self.token).build()
+        app = Application.builder().token(self.token).post_init(self.post_init).build()
         self.setup_handlers(app)
         app.run_polling()
 
