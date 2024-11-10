@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 from telegram import BotCommand, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
@@ -31,11 +33,15 @@ class CommandRegistry:
         )
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        help_text = """Available commands:
-/help - Show this help message
-/portfolio - View your portfolio
-/analyze - Analyze market conditions
-/recommend - Get investment recommendations"""
+        help_text = dedent(
+            """
+            Available commands:
+            /help - Show this help message
+            /portfolio - View your portfolio
+            /analyze - Analyze market conditions
+            /recommend - Get investment recommendations
+            """
+        )
         await update.message.reply_text(help_text, reply_markup=self.markup)
 
     async def portfolio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -57,11 +63,13 @@ class CommandRegistry:
         # Add recommendation logic here using self.connector
 
     async def menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        menu_text = f"""📋 Available Commands:
-❓ /help - Show help message
-{ButtonText.PORTFOLIO} - View your portfolio
-{ButtonText.ANALYZE} - Analyze market conditions
-{ButtonText.RECOMMEND} - Get investment recommendations"""
+        menu_text = dedent(f"""
+            📋 Available Commands:
+            ❓ /help - Show help message
+            {ButtonText.PORTFOLIO} - View your portfolio
+            {ButtonText.ANALYZE} - Analyze market conditions
+            {ButtonText.RECOMMEND} - Get investment recommendations
+        """)
         await update.message.reply_text(menu_text, reply_markup=self.markup)
 
     def get_handlers(self):
