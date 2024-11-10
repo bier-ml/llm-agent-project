@@ -48,19 +48,48 @@ class CommandRegistry:
         await update.message.reply_text(
             "Fetching your portfolio...", reply_markup=self.markup
         )
-        # Add actual portfolio logic here using self.connector
+        response = await self.connector.send_request(
+            "portfolio",
+            {"user_id": update.effective_user.id}
+        )
+        await update.message.reply_text(
+            response.get("message", "Failed to fetch portfolio"),
+            reply_markup=self.markup
+        )
 
     async def analyze(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Analyzing market conditions...", reply_markup=self.markup
         )
-        # Add market analysis logic here using self.connector
+        response = await self.connector.send_request(
+            "process_message",
+            {
+                "user_id": str(update.effective_user.id),
+                "content": "",
+                "llm_type": "",
+            }
+        )
+        await update.message.reply_text(
+            response.get("message", "Failed to analyze market conditions"),
+            reply_markup=self.markup
+        )
 
     async def recommend(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Generating investment recommendations...", reply_markup=self.markup
         )
-        # Add recommendation logic here using self.connector
+        response = await self.connector.send_request(
+            "process_message",
+            {
+                "user_id": str(update.effective_user.id),
+                "content": "",
+                "llm_type": "",
+            }
+        )
+        await update.message.reply_text(
+            response.get("message", "Failed to generate recommendations"),
+            reply_markup=self.markup
+        )
 
     async def menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         menu_text = dedent(f"""
