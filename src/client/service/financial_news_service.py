@@ -1,16 +1,20 @@
+import logging
 import os
 
 from dotenv import load_dotenv
 from newsapi import NewsApiClient
 
+logger = logging.getLogger(__name__)
 
 class FinancialNewsService:
     def __init__(self):
         load_dotenv()
         api_key = os.getenv("NEWSAPI_KEY")
         if not api_key:
+            logger.error("NEWSAPI_KEY environment variable is not set")
             raise ValueError("NEWSAPI_KEY environment variable is not set")
         self.api = NewsApiClient(api_key=api_key)
+        logger.info("FinancialNewsService initialized successfully")
 
     def get_financial_news(
         self,
@@ -19,30 +23,20 @@ class FinancialNewsService:
         sort_by="relevancy",
         page_size=5,
     ):
-        """
-        Fetch financial news using the NewsAPI 'everything' endpoint.
-
-        Args:
-        - keywords: str, Keywords related to finance like 'stock', 'crypto', etc.
-        - language: str, Language of the news articles. Default is 'en' for English.
-        - sort_by: str, Sorting method for news articles ('relevancy', 'popularity', 'publishedAt').
-        - page_size: int, The number of news articles to return.
-
-        Returns:
-        - List of news articles containing title, description, and url.
-        """
+        logger.info(f"Fetching financial news with keywords: {keywords}")
         try:
             response = self.api.get_everything(
                 q=keywords, language=language, sort_by=sort_by, page_size=page_size
             )
 
             if response["status"] == "ok":
+                logger.info(f"Successfully fetched {len(response['articles'])} news articles")
                 return response["articles"]
             else:
-                print(f"Error fetching news: {response['status']}")
+                logger.error(f"Error fetching news: {response['status']}")
                 return []
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred while fetching news: {e}")
             return []
 
     def print_news(self, articles):
@@ -63,11 +57,8 @@ class FinancialNewsService:
 if __name__ == "__main__":
     load_dotenv()
 
-    # Your NewsAPI key here
-    api_key = os.getenv("NEWSAPI_KEY")
-
     # Initialize the FinancialNewsClient with the API key
-    news_client = FinancialNewsService(api_key=api_key)
+    news_client = FinancialNewsService()
 
     # Fetch news about stock or crypto
     financial_news = news_client.get_financial_news(page_size=100)

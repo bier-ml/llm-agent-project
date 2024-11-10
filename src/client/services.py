@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 import httpx
@@ -6,26 +7,40 @@ from src.client.service.coin_price_service import CoinPriceService
 from src.client.service.financial_news_service import FinancialNewsService
 from src.common.interfaces import ServiceConnector
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AgentServiceConnector(ServiceConnector):
     def __init__(self, base_url: str):
         self.base_url = base_url
+        self.logger = logging.getLogger(__name__)
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Send request to agent service."""
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{self.base_url}/{endpoint}", json=data)
-            return response.json()
+        self.logger.info(f"Sending request to {endpoint} with data: {data}")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"{self.base_url}/{endpoint}", json=data)
+                response_data = response.json()
+                self.logger.info(f"Received response from agent: {response_data}")
+                return response_data
+        except Exception as e:
+            self.logger.error(f"Error sending request to agent: {str(e)}")
+            raise
 
 
 class ToolCallHandler:
     def __init__(self):
         self.coin_price_service = CoinPriceService()
         self.news_service = FinancialNewsService()
+        self.logger = logging.getLogger(__name__)
 
     async def handle(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tool calls from the agent."""
         tool_type = tool_call.get("type")
+        self.logger.info(f"Handling tool call of type: {tool_type}")
+        self.logger.debug(f"Tool call data: {tool_call}")
 
         handlers = {
             "get_coin_price": self._handle_coin_price,
@@ -37,8 +52,16 @@ class ToolCallHandler:
 
         handler = handlers.get(tool_type)
         if handler:
-            return await handler(tool_call)
+            try:
+                result = await handler(tool_call)
+                self.logger.info(f"Successfully handled {tool_type} tool call")
+                self.logger.debug(f"Tool call result: {result}")
+                return result
+            except Exception as e:
+                self.logger.error(f"Error handling {tool_type} tool call: {str(e)}")
+                return {"error": f"Failed to handle {tool_type}: {str(e)}"}
 
+        self.logger.warning(f"Unknown tool type received: {tool_type}")
         return {"error": f"Unknown tool type: {tool_type}"}
 
     async def _handle_coin_price(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
