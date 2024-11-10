@@ -111,7 +111,8 @@ async def test_process_message_full_response():
 
     processor._create_chat_completion = mock_completion
 
-    message = Message(content="What's happening with AAPL?")
+    # Add user_id to the Message constructor
+    message = Message(content="What's happening with AAPL?", user_id="test_user")
     result = await processor.process_message(message)
 
     assert result["thought"] == "I should analyze the market"
