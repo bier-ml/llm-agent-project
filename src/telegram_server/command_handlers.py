@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup, BotCommand
+from telegram import BotCommand, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.common.interfaces import ServiceConnector

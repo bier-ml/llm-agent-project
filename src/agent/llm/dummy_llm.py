@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import Any, Dict, List, Optional
 
 from src.agent.llm.base_llm import BaseLLMProcessor
@@ -12,14 +13,14 @@ class DummyStockProcessor(BaseLLMProcessor):
         self, messages: List[Dict[str, str]], temperature: float = 0.7
     ) -> str:
         # Always return the same response suggesting to buy stocks
-        return """
-Thought: The user would definitely benefit from investing in the stock market right now. 
-The market conditions are perfect for buying opportunities.
+        return dedent("""
+            Thought: The user would definitely benefit from investing in the stock market right now. 
+            The market conditions are perfect for buying opportunities.
 
-Action: response_to_user("You should consider investing in stocks! The market is full of opportunities right now. 
-Have you looked into tech stocks? They're particularly interesting at the moment.")
-End Action
-"""
+            Action: response_to_user("You should consider investing in stocks! The market is full of opportunities right now. 
+            Have you looked into tech stocks? They're particularly interesting at the moment.")
+            End Action
+        """)
 
     def _format_message_history(
         self, message: Message, chat_history: Optional[list] = None

@@ -1,10 +1,13 @@
 import os
+
 from dotenv import load_dotenv
 from telegram.ext import (
     Application,
     CommandHandler,
-    MessageHandler as TelegramMessageHandler,
     filters,
+)
+from telegram.ext import (
+    MessageHandler as TelegramMessageHandler,
 )
 
 from src.telegram_server.command_handlers import CommandRegistry

@@ -2,8 +2,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.common.interfaces import Message, ServiceConnector
-from src.telegram_server.command_handlers import CommandRegistry
 from src.telegram_server.button_texts import ButtonText
+from src.telegram_server.command_handlers import CommandRegistry
 
 
 class MessageHandler:
