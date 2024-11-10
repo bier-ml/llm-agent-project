@@ -1,0 +1,21 @@
+id,title,content,related_symbols,impact
+1,"Tesla Announces Revolutionary New Battery Technology","Tesla unveiled a breakthrough in battery technology, claiming 50% more range and 30% lower production costs. CEO Elon Musk stated this will revolutionize their entire vehicle lineup.",TSLA;RIVN;F,positive
+2,"Apple's iPhone 15 Sales Disappoint in Asian Markets","Initial sales reports from Asian markets indicate iPhone 15 adoption rates are lower than expected, with consumers citing high prices as main concern. Samsung and Xiaomi gain market share.",AAPL;SSNLF,negative
+3,"Microsoft Acquires AI Startup for $5 Billion","Microsoft announces acquisition of leading AI startup Anthropic, strengthening its position in the artificial intelligence race. The news impacts other AI players in the market.",MSFT;GOOGL;NVDA,positive
+4,"Crypto Exchange Binance Faces Regulatory Scrutiny","Major cryptocurrency exchange Binance under investigation by multiple regulators for potential compliance violations. Other exchanges face increased scrutiny.",BNB;COIN,negative
+5,"Amazon Expands Healthcare Initiative","Amazon's healthcare division partners with major hospital chains to provide telehealth services nationwide. Traditional healthcare providers see stock impact.",AMZN;CVS;WBA,positive
+6,"Global Chip Shortage Impacts Gaming Console Production","Sony and Microsoft report continued production challenges due to semiconductor shortages. TSMC announces production capacity increase.",SONY;MSFT;TSM,negative
+7,"New Climate Report Shows Rising Environmental Risks","Latest climate report highlights increasing environmental challenges, but no direct business impact identified.",,neutral
+8,"Bitcoin Surges Past $100,000","Bitcoin reaches all-time high as institutional adoption increases and ETF approval seems likely. Crypto mining stocks soar.",BTC;RIOT;MARA,positive
+9,"Netflix Subscriber Growth Exceeds Expectations","Netflix adds 10 million new subscribers, beating analyst estimates by 40%. Streaming competitors see market pressure.",NFLX;DIS;PARA,positive
+10,"Meta's VR Hardware Sales Plummet","Meta's Reality Labs division reports significant decline in VR headset sales, raising concerns about metaverse strategy.",META,negative
+11,"Local Coffee Shop Chain Expands Operations","Regional coffee shop opens five new locations in metropolitan area.",,neutral
+12,"NVIDIA AI Chip Demand Soars","NVIDIA reports unprecedented demand for AI chips, with order backlog extending into next year. AMD and Intel struggle to compete in AI market.",NVDA;AMD;INTC,positive
+13,"Ethereum Transition to PoS Reduces Energy Usage","Ethereum's successful transition to proof-of-stake cuts energy consumption by 99%. Mining hardware manufacturers see stock decline.",ETH;NVDA;AMD,mixed
+14,"Disney+ Loses Streaming Market Share","Disney+ subscriber growth stalls as competition intensifies in streaming market. Netflix and Amazon Prime gain subscribers.",DIS;NFLX;AMZN,mixed
+15,"Google Cloud Partners with Healthcare Providers","Google Cloud announces partnerships with major healthcare providers for AI-driven diagnostics.",GOOGL,positive
+16,"Weather Events Disrupt Agricultural Production","Severe weather patterns affect crop yields in midwest, but no significant impact on major agricultural companies.",,neutral
+17,"PayPal Introduces Crypto Payment Features","PayPal expands cryptocurrency services, allowing merchants to accept major cryptocurrencies. Block and Coinbase stock rise on industry adoption.",PYPL;SQ;COIN;BTC;ETH,positive
+18,"EV Market Competition Intensifies","Tesla faces increasing competition as Ford and Rivian ramp up production. Battery suppliers see increased demand.",TSLA;F;RIVN;ALB,mixed
+19,"Social Media Privacy Concerns Rise","New report highlights privacy issues across social platforms, but no specific companies named.",,neutral
+20,"Semiconductor Supply Chain Disruption","TSMC production issues affect multiple chip makers and downstream manufacturers.",TSM;NVDA;AMD;INTC,negative
