@@ -19,7 +19,8 @@ class LMStudioProcessor(BaseLLMProcessor):
             mock_functions (Optional[List[callable]]): List of mock functions to use for parameter parsing.
                 If None, no function parameter mapping will be attempted.
         """
-        self.base_url = os.getenv("LMSTUDIO_API_URL", "http://localhost:1234/v1")
+        self.base_url = os.getenv(
+            "LMSTUDIO_API_URL", "http://localhost:1234/v1")
         self.system_prompt = CODE_ACTION_SYSTEM_PROMPT
         self.mock_functions = mock_functions or []
 
@@ -38,7 +39,8 @@ class LMStudioProcessor(BaseLLMProcessor):
                     },
                 ) as response:
                     if response.status != 200:
-                        raise Exception(f"API returned status code {response.status}")
+                        raise Exception(
+                            f"API returned status code {response.status}")
 
                     result = await response.json()
                     return result["choices"][0]["message"]["content"]
@@ -81,7 +83,8 @@ class LMStudioProcessor(BaseLLMProcessor):
             params = {}
             if params_str:
                 # Split by comma, but not within quotes
-                param_parts = re.findall(r"""(?:[^,"]|"(?:\\.|[^"])*")+""", params_str)
+                param_parts = re.findall(
+                    r"""(?:[^,"]|"(?:\\.|[^"])*")+""", params_str)
 
                 # Get function signature if available
                 param_names = []

@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Tuple
+import re
 
 import httpx
 
@@ -11,23 +12,55 @@ from src.common.interfaces import ServiceConnector
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class AgentServiceConnector(ServiceConnector):
     def __init__(self, base_url: str):
         self.base_url = base_url
         self.logger = logging.getLogger(__name__)
+        # Add timeout configurations
+        self.timeout_settings = httpx.Timeout(
+            timeout=3000.0,  # 30 seconds for the entire operation
+            connect=1000.0,  # 10 seconds for connecting
+            read=2000.0,    # 20 seconds for reading
+            write=1000.0    # 10 seconds for writing
+        )
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Send request to agent service."""
         self.logger.info(f"Sending request to {endpoint} with data: {data}")
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=self.timeout_settings) as client:
+                self.logger.debug(
+                    f"Making POST request to {self.base_url}/{endpoint}")
                 response = await client.post(f"{self.base_url}/{endpoint}", json=data)
+
+                # Check if the response was successful
+                response.raise_for_status()
+
                 response_data = response.json()
-                self.logger.info(f"Received response from agent: {response_data}")
+                self.logger.info(
+                    f"Received response from agent: {response_data}")
                 return response_data
+
+        except httpx.TimeoutException as e:
+            error_msg = f"Timeout while connecting to agent service: {str(e)}"
+            self.logger.error(error_msg)
+            raise TimeoutError(error_msg) from e
+
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+            self.logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+        except httpx.RequestError as e:
+            error_msg = f"Request error occurred: {str(e)}"
+            self.logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
         except Exception as e:
-            self.logger.error(f"Error sending request to agent: {str(e)}")
-            raise
+            error_msg = f"Error sending request to agent: {str(e)}"
+            self.logger.error(error_msg, exc_info=True)
+            raise RuntimeError(error_msg) from e
 
 
 class ToolCallHandler:
@@ -48,6 +81,7 @@ class ToolCallHandler:
             "get_news": self._handle_news,
             "get_market_news": self._handle_market_news,
             "get_coin_news": self._handle_coin_news,
+            "response_to_user": self._handle_user_response,
         }
 
         handler = handlers.get(tool_type)
@@ -58,7 +92,8 @@ class ToolCallHandler:
                 self.logger.debug(f"Tool call result: {result}")
                 return result
             except Exception as e:
-                self.logger.error(f"Error handling {tool_type} tool call: {str(e)}")
+                self.logger.error(
+                    f"Error handling {tool_type} tool call: {str(e)}")
                 return {"error": f"Failed to handle {tool_type}: {str(e)}"}
 
         self.logger.warning(f"Unknown tool type received: {tool_type}")
@@ -184,3 +219,14 @@ class ToolCallHandler:
             }
         except Exception as e:
             return {"error": f"Failed to fetch crypto news: {str(e)}"}
+
+    async def _handle_user_response(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle direct responses to the user."""
+        message = tool_call.get("message")
+        if not message:
+            return {"error": "No message provided for user response"}
+
+        return {
+            "type": "user_response",
+            "message": message
+        }
