@@ -94,7 +94,7 @@ class ToolCallHandler:
             except Exception as e:
                 self.logger.error(
                     f"Error handling {tool_type} tool call: {str(e)}")
-                return {"error": f"Failed to handle {tool_type}: {str(e)}"}
+                return
 
         self.logger.warning(f"Unknown tool type received: {tool_type}")
         return {"error": f"Unknown tool type: {tool_type}"}
@@ -160,15 +160,7 @@ class ToolCallHandler:
             )
 
             return {
-                "articles": [
-                    {
-                        "title": article["title"],
-                        "description": article["description"],
-                        "url": article["url"],
-                        "published_at": article["publishedAt"],
-                    }
-                    for article in articles
-                ]
+                "articles": self.news_service.print_news(articles=articles)
             }
         except Exception as e:
             return {"error": f"Failed to fetch news: {str(e)}"}
@@ -182,15 +174,7 @@ class ToolCallHandler:
 
             return {
                 "category": "stock_market",
-                "articles": [
-                    {
-                        "title": article["title"],
-                        "description": article["description"],
-                        "url": article["url"],
-                        "published_at": article["publishedAt"],
-                    }
-                    for article in articles
-                ],
+                "articles": self.news_service.print_news(articles=articles),
             }
         except Exception as e:
             return {"error": f"Failed to fetch market news: {str(e)}"}

@@ -6,6 +6,7 @@ from newsapi import NewsApiClient
 
 logger = logging.getLogger(__name__)
 
+
 class FinancialNewsService:
     def __init__(self):
         load_dotenv()
@@ -30,7 +31,8 @@ class FinancialNewsService:
             )
 
             if response["status"] == "ok":
-                logger.info(f"Successfully fetched {len(response['articles'])} news articles")
+                logger.info(
+                    f"Successfully fetched {len(response['articles'])} news articles")
                 return response["articles"]
             else:
                 logger.error(f"Error fetching news: {response['status']}")
@@ -41,16 +43,20 @@ class FinancialNewsService:
 
     def print_news(self, articles):
         """
-        Print the list of news articles.
+        Print the list of news articles and return the output as a string.
 
         Args:
         - articles: List of news articles with title, description, and url.
         """
+        output = []  # Initialize a list to collect output strings
         for idx, article in enumerate(articles, start=1):
-            print(f"{idx}. {article['title']}")
-            print(f"   {article['description']}")
-            print(f"   Content: {article['content']}")
-            print("-" * 80)
+            output.append(f"{idx}. {article['title']}")
+            output.append(f"   {article['description']}")
+            output.append(f"   Content: {article['content']}")
+            output.append("-" * 80)
+
+        print("\n".join(output))  # Print the collected output
+        return "\n".join(output)  # Return the output as a single string
 
 
 # Usage Example
@@ -65,3 +71,5 @@ if __name__ == "__main__":
 
     # Print the news articles
     news_client.print_news(financial_news)
+
+    print(financial_news)

@@ -65,7 +65,7 @@ class CommandRegistry:
             "process_message",
             {
                 "user_id": str(update.effective_user.id),
-                "content": "",
+                "content": "Analyze current market conditions and provide insight into trends",
                 "llm_type": "",
             }
         )
@@ -82,7 +82,7 @@ class CommandRegistry:
             "process_message",
             {
                 "user_id": str(update.effective_user.id),
-                "content": "",
+                "content": "Provide investment recommendations according to the current state of the market trends",
                 "llm_type": "",
             }
         )
