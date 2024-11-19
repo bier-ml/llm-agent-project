@@ -114,7 +114,7 @@ client_service = ClientService()
 async def process_message(message: Message):
     logger.info(f"Received message processing request: {message}")
     try:
-        message.llm_type = "lmstudio"
+        message.llm_type = "jsonBasedLLM"
 
         response = await client_service.process_message(message)
         logger.info(f"Successfully processed message: {response}")

@@ -14,7 +14,7 @@ app = FastAPI()
 llm_processors: Dict[str, BaseLLMProcessor] = {
     "dummy": DummyStockProcessor(),
     "lmstudio": LMStudioProcessor(),
-    "lmstudio": JsonProcessor(),
+    "jsonBasedLLM": JsonProcessor(),
 }
 
 

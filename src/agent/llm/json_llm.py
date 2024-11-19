@@ -70,3 +70,17 @@ class JsonProcessor(BaseLLMProcessor):
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}", exc_info=True)
             return {"error": f"Error in LLM processing: {str(e)}"}
+
+    def _parse_action_block(self, content: str) -> Dict[str, Any]:
+        """
+        Parse the action block to extract function name and parameters.
+        This method is not used in JsonProcessor but required by the abstract base class.
+        """
+        pass
+
+    def _extract_thought(self, content: str) -> Optional[str]:
+        """
+        Extract the thought process from the response content.
+        This method is not used in JsonProcessor but required by the abstract base class.
+        """
+        pass
