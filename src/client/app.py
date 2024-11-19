@@ -1,6 +1,5 @@
 import logging
 import os
-import json
 from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
@@ -37,41 +36,29 @@ class ClientService:
             f"'{original_message}'"
         )
 
-    # TODO: move parsing to agent side
     async def process_message(self, message: Message) -> Dict[str, Any]:
         self.logger.info(f"Processing message: {message}")
         try:
-
+            current_context = {
+                "content": message.content,
+                "user_id": message.user_id,
+                "llm_type": message.llm_type,
+                "metadata": message.metadata
+            }
+            
             while True:
                 # Get next action from agent
-                response = await self.agent_connector.send_request("process", message.__dict__)
+                response = await self.agent_connector.send_request("process", current_context)
                 self.logger.info(f"Received response from agent: {response}")
 
                 if not isinstance(response, dict):
                     return {"error": "Invalid response format from agent"}
 
-                # Extract "message" from response and remove all ` symbols
-                message_content = response.get("message", "").replace(
-                    "```json", "").replace("`", "")
-                self.logger.info(f"Parsed message content: {message_content}")
-
-                # Parse the message_content as JSON
-                try:
-                    message_content = json.loads(message_content)
-                except json.JSONDecodeError as e:
-                    self.logger.error(
-                        f"Failed to parse message content as JSON: {str(e)}")
-                    return {"error": "Invalid JSON format in message content"}
-
-                # Parse actions and thoughts from the cleaned message
-                thought = message_content.get("thought", "")
-                actions = message_content.get("actions", [])
-                self.logger.info(
-                    f"Parsed thought: {thought}, actions: {actions}")
+                thought = response.get("thought", "")
+                actions = response.get("actions", [])
 
                 # If no actions or response_to_user, return the thought to user
                 if not actions or (len(actions) == 1 and actions[0]["name"] == "response_to_user"):
-                    # Check if the action is "response_to_user" and return its argument
                     if actions and actions[0]["name"] == "response_to_user":
                         return {"message": actions[0].get("argument", "")}
                     return {"message": thought}
@@ -83,14 +70,7 @@ class ClientService:
                         "type": action["name"],
                         **(action.get("argument", {}) if isinstance(action.get("argument"), dict) else {"coin_id": action.get("argument", "")})
                     }
-                    # Log the built tool_call
-                    self.logger.info(f"Built tool_call: {tool_call}")
-
                     result = await self.tool_handler.handle(tool_call)
-
-                    # Log the result of the tool call
-                    self.logger.info(f"Result of tool_call: {result}")
-
                     results.append(result)
 
                 # Create human readable message with results
@@ -100,7 +80,12 @@ class ClientService:
                 )
 
                 # Update context with results for next iteration
-                message.content = results_message
+                current_context = {
+                    "content": results_message,
+                    "user_id": message.user_id,
+                    "llm_type": message.llm_type,
+                    "metadata": message.metadata
+                }
 
         except Exception as e:
             self.logger.error(f"Error processing message: {str(e)}")
@@ -119,7 +104,6 @@ async def process_message(message: Message):
         response = await client_service.process_message(message)
         logger.info(f"Successfully processed message: {response}")
 
-        # Return the message and any action results
         if isinstance(response, dict):
             if "error" in response:
                 raise HTTPException(status_code=500, detail=response["error"])

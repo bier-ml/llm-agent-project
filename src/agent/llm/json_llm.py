@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 class JsonProcessor(BaseLLMProcessor):
     def __init__(self):
         """Initialize JSON format processor."""
-        self.base_url = os.getenv("LLM_API_URL", "http://localhost:5001/v1")
+        self.base_url = os.getenv("LLM_API_URL", "http://localhost:1234/v1")
         self.system_prompt = JSON_PROMPT
         logger.info(f"Initialized JsonProcessor with base URL: {self.base_url}")
 
@@ -58,6 +59,33 @@ class JsonProcessor(BaseLLMProcessor):
         logger.debug(f"Formatted message history with {len(messages)} total messages")
         return messages
 
+    def _parse_action_block(self, content: str) -> Dict[str, Any]:
+        """Parse the action block to extract function name and parameters."""
+        try:
+            # Remove markdown code block markers if present
+            cleaned_content = content.replace("```json", "").replace("```", "").strip()
+            parsed_content = json.loads(cleaned_content)
+            
+            return {
+                "thought": parsed_content.get("thought", ""),
+                "actions": parsed_content.get("actions", [])
+            }
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON content: {str(e)}")
+            return {
+                "thought": "I apologize, but I couldn't parse the response format correctly.",
+                "actions": []
+            }
+
+    def _extract_thought(self, content: str) -> Optional[str]:
+        """Extract the thought process from the response content."""
+        try:
+            parsed_content = self._parse_action_block(content)
+            return parsed_content.get("thought")
+        except Exception as e:
+            logger.error(f"Error extracting thought: {str(e)}")
+            return None
+
     async def process_message(self, message: Message) -> Dict[str, Any]:
         """Process a message and return the LLM's response."""
         try:
@@ -65,22 +93,15 @@ class JsonProcessor(BaseLLMProcessor):
             messages = self._format_message_history(message)
             response = await self._create_chat_completion(messages)
             logger.debug("Successfully received completion from LLM")
-            return {"message": response}
+            
+            # Parse the response and extract thought and actions
+            parsed_response = self._parse_action_block(response)
+            
+            return parsed_response
 
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}", exc_info=True)
-            return {"error": f"Error in LLM processing: {str(e)}"}
-
-    def _parse_action_block(self, content: str) -> Dict[str, Any]:
-        """
-        Parse the action block to extract function name and parameters.
-        This method is not used in JsonProcessor but required by the abstract base class.
-        """
-        pass
-
-    def _extract_thought(self, content: str) -> Optional[str]:
-        """
-        Extract the thought process from the response content.
-        This method is not used in JsonProcessor but required by the abstract base class.
-        """
-        pass
+            return {
+                "thought": f"Error in LLM processing: {str(e)}",
+                "actions": []
+            }
