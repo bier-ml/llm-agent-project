@@ -11,15 +11,15 @@ RUN apt-get update && apt-get install -y \
 RUN pip install poetry
 
 # Copy dependency files
-COPY pyproject.toml poetry.lock ./
-COPY .env ./
+COPY pyproject.toml poetry.lock ./ 
+COPY .env ./ 
 
 # Configure poetry and install dependencies
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
+    && poetry install --no-root --no-interaction --no-ansi
 
 # Copy source code
 COPY src/ /app/src/
 
-# Run the telegram bot
-CMD ["python", "-m", "src.telegram_server.telegram_bot"] 
+# Run the Telegram bot script directly
+CMD ["python", "-m", "src.telegram_server.telegram_bot"]

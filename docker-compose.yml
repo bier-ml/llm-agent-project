@@ -1,53 +1,55 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  telegram_bot:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.telegram_bot
-    env_file:
-      - .env
-    environment:
-      - CLIENT_SERVICE_URL=http://client_api:8000
-    depends_on:
-      - client_api
-    networks:
-      - ivan_network
-    restart: unless-stopped
+    telegram_bot:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.telegram_bot
+        env_file:
+            - .env
+        environment:
+            - CLIENT_SERVICE_URL=http://client_api:8000
+        depends_on:
+            - client_api
+        networks:
+            - ivan_network
+        ports:
+            - "8002:8002"
+        restart: unless-stopped
 
-  client_api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.client_api
-    env_file:
-      - .env
-    environment:
-      - AGENT_SERVICE_URL=http://llm_agent:8001
-    ports:
-      - "8000:8000"
-    depends_on:
-      - llm_agent
-    networks:
-      - ivan_network
-    restart: unless-stopped
+    client_api:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.client_api
+        env_file:
+            - .env
+        environment:
+            - AGENT_SERVICE_URL=http://llm_agent:8001
+        ports:
+            - "8000:8000"
+        depends_on:
+            - llm_agent
+        networks:
+            - ivan_network
+        restart: unless-stopped
 
-  llm_agent:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.llm_agent
-    env_file:
-      - .env
-    environment:
-      - LMSTUDIO_API_URL=http://host.docker.internal:1234/v1
-      - LLM_API_URL=http://host.docker.internal:5001/v1
-    ports:
-      - "8001:8001"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - ivan_network
-    restart: unless-stopped
+    llm_agent:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.llm_agent
+        env_file:
+            - .env
+        environment:
+            - LMSTUDIO_API_URL=http://host.docker.internal:1234/v1
+            - LLM_API_URL=http://host.docker.internal:5001/v1
+        ports:
+            - "8001:8001"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            - ivan_network
+        restart: unless-stopped
 
 networks:
-  ivan_network:
-    driver: bridge
+    ivan_network:
+        driver: bridge

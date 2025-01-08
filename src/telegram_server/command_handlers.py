@@ -1,4 +1,5 @@
 from textwrap import dedent
+import logging
 
 from telegram import BotCommand, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -12,6 +13,7 @@ class CommandRegistry:
         self.connector = connector
         self.keyboard = ButtonText.get_keyboard_layout()
         self.markup = ReplyKeyboardMarkup(self.keyboard, resize_keyboard=True)
+        self.logger = logging.getLogger(__name__)
 
         # Define commands for menu button
         self.commands = [
@@ -21,11 +23,19 @@ class CommandRegistry:
             BotCommand("recommend", ButtonText.DESC_RECOMMEND),
         ]
 
+    def _log_command(self, update: Update, command: str):
+        """Helper method to log command usage"""
+        user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
+        self.logger.info(
+            f"Command '{command}' used by user_id={user_id}, chat_id={chat_id}")
+
     async def setup_commands(self, application):
         """Set up the bot commands in Telegram"""
         await application.bot.set_my_commands(self.commands)
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        self._log_command(update, "start")
         await update.message.reply_text(
             "Hello! I'm IVAN, your Interactive Venture Analysis Network. "
             "I can help you manage your financial portfolio and provide investment recommendations.",

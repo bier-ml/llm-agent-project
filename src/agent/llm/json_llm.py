@@ -17,14 +17,16 @@ class JsonProcessor(BaseLLMProcessor):
         """Initialize JSON format processor."""
         self.base_url = os.getenv("LLM_API_URL", "http://localhost:1234/v1")
         self.system_prompt = JSON_PROMPT
-        logger.info(f"Initialized JsonProcessor with base URL: {self.base_url}")
+        logger.info(
+            f"Initialized JsonProcessor with base URL: {self.base_url}")
 
     async def _create_chat_completion(
         self, messages: List[Dict[str, str]], temperature: float = 0.7
     ) -> str:
         """Create a chat completion using the LLM API."""
         try:
-            logger.debug(f"Sending request to LLM API with temperature: {temperature}")
+            logger.info(
+                f"Sending request to LLM API with temperature: {temperature}")
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     f"{self.base_url}/chat/completions",
@@ -35,11 +37,13 @@ class JsonProcessor(BaseLLMProcessor):
                     },
                 ) as response:
                     if response.status != 200:
-                        logger.error(f"API returned non-200 status code: {response.status}")
-                        raise Exception(f"API returned status code {response.status}")
+                        logger.error(
+                            f"API returned non-200 status code: {response.status}")
+                        raise Exception(
+                            f"API returned status code {response.status}")
 
                     result = await response.json()
-                    logger.debug("Successfully received response from LLM API")
+                    logger.info("Successfully received response from LLM API")
                     return result["choices"][0]["message"]["content"]
         except Exception as e:
             logger.error(f"Error in LLM processing: {str(e)}", exc_info=True)
@@ -53,19 +57,34 @@ class JsonProcessor(BaseLLMProcessor):
 
         if chat_history:
             messages.extend(chat_history)
-            logger.debug(f"Added {len(chat_history)} messages from chat history")
+            logger.debug(
+                f"Added {len(chat_history)} messages from chat history")
 
         messages.append({"role": "user", "content": message.content})
-        logger.debug(f"Formatted message history with {len(messages)} total messages")
+        logger.debug(
+            f"Formatted message history with {len(messages)} total messages")
         return messages
 
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
         """Parse the action block to extract function name and parameters."""
         try:
             # Remove markdown code block markers if present
-            cleaned_content = content.replace("```json", "").replace("```", "").strip()
-            parsed_content = json.loads(cleaned_content)
-            
+            cleaned_content = content.replace(
+                "```json", "").replace("```", "").strip()
+            parsed_content = "{}"
+            # Extract the JSON object between the first '{' and the last '}'
+            start = cleaned_content.find("{")
+            end = cleaned_content.rfind("}") + 1  # Include the closing '}'
+            if start != -1 and end != -1:
+                json_string = cleaned_content[start:end]
+                try:
+                    parsed_content = json.loads(json_string)
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"Invalid JSON content: {e}")
+            else:
+                raise ValueError("No JSON object found in the content")
+
+            print(parsed_content)
             return {
                 "thought": parsed_content.get("thought", ""),
                 "actions": parsed_content.get("actions", [])
@@ -93,10 +112,10 @@ class JsonProcessor(BaseLLMProcessor):
             messages = self._format_message_history(message)
             response = await self._create_chat_completion(messages)
             logger.debug("Successfully received completion from LLM")
-            
+
             # Parse the response and extract thought and actions
             parsed_response = self._parse_action_block(response)
-            
+
             return parsed_response
 
         except Exception as e:

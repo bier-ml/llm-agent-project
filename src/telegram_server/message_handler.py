@@ -16,9 +16,10 @@ class MessageHandler:
             ButtonText.ANALYZE: command_registry.analyze,
             ButtonText.RECOMMEND: command_registry.recommend,
         }
-
     async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
+        user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
 
         # Check if the message is a button press
         if text in self.text_to_handler:
@@ -27,9 +28,9 @@ class MessageHandler:
 
         # Handle regular messages
         message = Message(
-            user_id=update.effective_user.id,
+            user_id=user_id,
             content=text,
-            metadata={"chat_id": update.effective_chat.id},
+            metadata={"chat_id": chat_id},
         )
         response = await self.connector.send_request(
             "process_message", message.__dict__

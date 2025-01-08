@@ -206,6 +206,7 @@ class ToolCallHandler:
 
     async def _handle_user_response(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Handle direct responses to the user."""
+        logger.info("got tool call: "+tool_call)
         message = tool_call.get("message")
         if not message:
             return {"error": "No message provided for user response"}
@@ -214,3 +215,50 @@ class ToolCallHandler:
             "type": "user_response",
             "message": message
         }
+
+
+class TelegramServiceConnector(ServiceConnector):
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+        self.logger = logging.getLogger(__name__)
+        self.timeout_settings = httpx.Timeout(
+            timeout=3000.0,  # 30 seconds for the entire operation
+            connect=1000.0,  # 10 seconds for connecting
+            read=2000.0,     # 20 seconds for reading
+            write=1000.0     # 10 seconds for writing
+        )
+
+    async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Send a request to the Telegram service."""
+        self.logger.info(f"Sending request to {endpoint} with data: {data}")
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_settings) as client:
+                response = await client.post(f"{self.base_url}/{endpoint}", json=data)
+
+                # Check if the response was successful
+                response.raise_for_status()
+
+                response_data = response.json()
+                self.logger.info(
+                    f"Received response from Telegram service: {response_data}")
+                return response_data
+
+        except httpx.TimeoutException as e:
+            error_msg = f"Timeout while connecting to Telegram service: {str(e)}"
+            self.logger.error(error_msg)
+            raise TimeoutError(error_msg) from e
+
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+            self.logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+        except httpx.RequestError as e:
+            error_msg = f"Request error occurred: {str(e)}"
+            self.logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+        except Exception as e:
+            error_msg = f"Error sending request to Telegram service: {str(e)}"
+            self.logger.error(error_msg, exc_info=True)
+            raise RuntimeError(error_msg) from e

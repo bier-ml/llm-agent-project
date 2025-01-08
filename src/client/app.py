@@ -1,12 +1,15 @@
+from datetime import datetime
+from typing import Dict, Any
+import asyncio
 import logging
 import os
 from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
 
-from src.client.services import AgentServiceConnector, ToolCallHandler
+from src.client.services import AgentServiceConnector, ToolCallHandler, TelegramServiceConnector
 from src.common.interfaces import Message
-
+from src.telegram_server.telegram_bot import IvanTelegramBot
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,11 +22,16 @@ class ClientService:
         self.agent_connector = AgentServiceConnector(
             base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001")
         )
+        self.telegram_connector = TelegramServiceConnector(
+            base_url=os.getenv("TELEGRAM_SERVICE_URL",
+                               "http://telegram_bot:8002")
+        )
         self.tool_handler = ToolCallHandler()
         self.logger = logging.getLogger(__name__)
+        self.last_news_state = None
 
     def _format_results_message(self, results: list, original_message: str) -> str:
-        """Format results into a human readable message for the agent."""
+        """Format results into a human-readable message for the agent."""
         results_text = "\n".join(
             f"- For action '{result.get('type', 'unknown')}': {result}"
             for result in results
@@ -43,9 +51,9 @@ class ClientService:
                 "content": message.content,
                 "user_id": message.user_id,
                 "llm_type": message.llm_type,
-                "metadata": message.metadata
+                "metadata": message.metadata,
             }
-            
+
             while True:
                 # Get next action from agent
                 response = await self.agent_connector.send_request("process", current_context)
@@ -73,10 +81,10 @@ class ClientService:
                     result = await self.tool_handler.handle(tool_call)
                     results.append(result)
 
-                # Create human readable message with results
+                # Create human-readable message with results
                 results_message = self._format_results_message(
                     results=results,
-                    original_message=message.content
+                    original_message=message.content,
                 )
 
                 # Update context with results for next iteration
@@ -84,15 +92,66 @@ class ClientService:
                     "content": results_message,
                     "user_id": message.user_id,
                     "llm_type": message.llm_type,
-                    "metadata": message.metadata
+                    "metadata": message.metadata,
                 }
 
         except Exception as e:
             self.logger.error(f"Error processing message: {str(e)}")
             raise
 
+    async def check_news(self):
+        """Periodically check the news and notify the user if anything changed."""
+        while True:
+            try:
+                # Fetch current news
+                current_news = await self.tool_handler.handle({"type": "get_news"})
+                self.logger.info(f"Fetched current news: {current_news}")
 
+                # Compare with the last news state
+                if self.last_news_state != current_news:
+                    prompt = (
+                        f"Please check if anything in the news changed significantly from the last state: "
+                        f"'{self.last_news_state}' to the current news: '{current_news}'. Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
+                    )
+                    self.logger.info(
+                        f"Sending news change prompt to agent: {prompt}")
+                    result = await self.agent_connector.send_request(
+                        "process",
+                        {"content": prompt, "user_id": "user1",
+                            "llm_type": "jsonBasedLLM"}
+                    )
+
+                    logger.warn(result)
+
+                    # Extract the 'argument' from the 'actions' list
+                    try:
+                        result = next(action['argument'] for action in result.get(
+                            'actions', []) if action.get('name') == 'response_to_user')
+                    except StopIteration:
+                        raise ValueError(
+                            "No 'response_to_user' action found in the response")
+
+                    # Send the result via Telegram
+                    await self.telegram_connector.send_request(
+                        "send_message",
+                        {
+                            "chat_id": 123, # TODO: your chat id here; env variable?
+                            "message": result
+                        }
+                    )
+                # Update the last news state
+                self.last_news_state = current_news
+
+            except Exception as e:
+                self.logger.error(f"Error checking news: {str(e)}")
+
+            # Wait for 30 minutes before checking again
+            await asyncio.sleep(60)
+
+
+# Start the periodic news check
 client_service = ClientService()
+asyncio.create_task(client_service.check_news())
 
 
 @app.post("/process_message")
