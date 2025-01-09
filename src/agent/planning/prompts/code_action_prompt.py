@@ -18,11 +18,7 @@ def generate_tool_description(functions: List[callable]) -> str:
         args_str = ", ".join(args) if args else "no arguments"
 
         # Get return type
-        return_type = (
-            signature.return_annotation.__name__
-            if signature.return_annotation != inspect._empty
-            else "Any"
-        )
+        return_type = signature.return_annotation.__name__ if signature.return_annotation != inspect._empty else "Any"
 
         # Build description
         signature_str = f"{name}({args_str}) -> {return_type}"

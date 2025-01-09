@@ -8,9 +8,7 @@ client = TestClient(app)
 
 def test_dummy_processor_default():
     """Test dummy processor when no llm_type is specified"""
-    response = client.post(
-        "/process", json={"content": "Hello", "user_id": "test_user"}
-    )
+    response = client.post("/process", json={"content": "Hello", "user_id": "test_user"})
 
     assert response.status_code == 200
     data = response.json()

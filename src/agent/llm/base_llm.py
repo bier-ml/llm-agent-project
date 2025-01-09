@@ -30,9 +30,7 @@ class BaseLLMProcessor(ABC):
         pass
 
     @abstractmethod
-    def _format_message_history(
-        self, message: Message, chat_history: Optional[list] = None
-    ) -> List[Dict[str, str]]:
+    def _format_message_history(self, message: Message, chat_history: Optional[list] = None) -> List[Dict[str, str]]:
         """
         Format the message and chat history for the LLM.
 
@@ -46,9 +44,7 @@ class BaseLLMProcessor(ABC):
         pass
 
     @abstractmethod
-    async def _create_chat_completion(
-        self, messages: List[Dict[str, str]], temperature: float = 0.7
-    ) -> str:
+    async def _create_chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> str:
         """
         Create a chat completion using the LLM's API.
 

@@ -26,13 +26,10 @@ class FinancialNewsService:
     ):
         logger.info(f"Fetching financial news with keywords: {keywords}")
         try:
-            response = self.api.get_everything(
-                q=keywords, language=language, sort_by=sort_by, page_size=page_size
-            )
+            response = self.api.get_everything(q=keywords, language=language, sort_by=sort_by, page_size=page_size)
 
             if response["status"] == "ok":
-                logger.info(
-                    f"Successfully fetched {len(response['articles'])} news articles")
+                logger.info(f"Successfully fetched {len(response['articles'])} news articles")
                 return response["articles"]
             else:
                 logger.error(f"Error fetching news: {response['status']}")

@@ -21,8 +21,8 @@ class AgentServiceConnector(ServiceConnector):
         self.timeout_settings = httpx.Timeout(
             timeout=3000.0,  # 30 seconds for the entire operation
             connect=1000.0,  # 10 seconds for connecting
-            read=2000.0,    # 20 seconds for reading
-            write=1000.0    # 10 seconds for writing
+            read=2000.0,  # 20 seconds for reading
+            write=1000.0,  # 10 seconds for writing
         )
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -30,16 +30,14 @@ class AgentServiceConnector(ServiceConnector):
         self.logger.info(f"Sending request to {endpoint} with data: {data}")
         try:
             async with httpx.AsyncClient(timeout=self.timeout_settings) as client:
-                self.logger.debug(
-                    f"Making POST request to {self.base_url}/{endpoint}")
+                self.logger.debug(f"Making POST request to {self.base_url}/{endpoint}")
                 response = await client.post(f"{self.base_url}/{endpoint}", json=data)
 
                 # Check if the response was successful
                 response.raise_for_status()
 
                 response_data = response.json()
-                self.logger.info(
-                    f"Received response from agent: {response_data}")
+                self.logger.info(f"Received response from agent: {response_data}")
                 return response_data
 
         except httpx.TimeoutException as e:
@@ -92,8 +90,7 @@ class ToolCallHandler:
                 self.logger.debug(f"Tool call result: {result}")
                 return result
             except Exception as e:
-                self.logger.error(
-                    f"Error handling {tool_type} tool call: {str(e)}")
+                self.logger.error(f"Error handling {tool_type} tool call: {str(e)}")
                 return
 
         self.logger.warning(f"Unknown tool type received: {tool_type}")
@@ -108,9 +105,7 @@ class ToolCallHandler:
             return {"error": "No coin_id provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(
-                coin_id=coin_id, vs_currency=vs_currency, days=1
-            )
+            df = self.coin_price_service.get_coin_price_history(coin_id=coin_id, vs_currency=vs_currency, days=1)
             current_price = df.iloc[-1]["price"] if not df.empty else None
 
             return {
@@ -132,9 +127,7 @@ class ToolCallHandler:
             return {"error": "No coin_id provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(
-                coin_id=coin_id, vs_currency=vs_currency, days=days
-            )
+            df = self.coin_price_service.get_coin_price_history(coin_id=coin_id, vs_currency=vs_currency, days=days)
 
             return {
                 "coin_id": coin_id,
@@ -143,9 +136,7 @@ class ToolCallHandler:
                 "current_price": df.iloc[-1]["price"] if not df.empty else None,
                 "highest_price": df["price"].max() if not df.empty else None,
                 "lowest_price": df["price"].min() if not df.empty else None,
-                "price_change": (df.iloc[-1]["price"] - df.iloc[0]["price"])
-                if not df.empty
-                else None,
+                "price_change": (df.iloc[-1]["price"] - df.iloc[0]["price"]) if not df.empty else None,
                 "start_date": df.index[0].isoformat() if not df.empty else None,
                 "end_date": df.index[-1].isoformat() if not df.empty else None,
             }
@@ -155,13 +146,9 @@ class ToolCallHandler:
     async def _handle_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get general financial news."""
         try:
-            articles = self.news_service.get_financial_news(
-                keywords="stock OR crypto", page_size=5
-            )
+            articles = self.news_service.get_financial_news(keywords="stock OR crypto", page_size=5)
 
-            return {
-                "articles": self.news_service.print_news(articles=articles)
-            }
+            return {"articles": self.news_service.print_news(articles=articles)}
         except Exception as e:
             return {"error": f"Failed to fetch news: {str(e)}"}
 
@@ -185,9 +172,7 @@ class ToolCallHandler:
 
         try:
             keywords = f"cryptocurrency OR crypto OR {coin_id}"
-            articles = self.news_service.get_financial_news(
-                keywords=keywords, page_size=5
-            )
+            articles = self.news_service.get_financial_news(keywords=keywords, page_size=5)
 
             return {
                 "coin_id": coin_id,
@@ -206,15 +191,12 @@ class ToolCallHandler:
 
     async def _handle_user_response(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Handle direct responses to the user."""
-        logger.info("got tool call: "+tool_call)
+        logger.info("got tool call: " + tool_call)
         message = tool_call.get("message")
         if not message:
             return {"error": "No message provided for user response"}
 
-        return {
-            "type": "user_response",
-            "message": message
-        }
+        return {"type": "user_response", "message": message}
 
 
 class TelegramServiceConnector(ServiceConnector):
@@ -224,8 +206,8 @@ class TelegramServiceConnector(ServiceConnector):
         self.timeout_settings = httpx.Timeout(
             timeout=3000.0,  # 30 seconds for the entire operation
             connect=1000.0,  # 10 seconds for connecting
-            read=2000.0,     # 20 seconds for reading
-            write=1000.0     # 10 seconds for writing
+            read=2000.0,  # 20 seconds for reading
+            write=1000.0,  # 10 seconds for writing
         )
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -239,8 +221,7 @@ class TelegramServiceConnector(ServiceConnector):
                 response.raise_for_status()
 
                 response_data = response.json()
-                self.logger.info(
-                    f"Received response from Telegram service: {response_data}")
+                self.logger.info(f"Received response from Telegram service: {response_data}")
                 return response_data
 
         except httpx.TimeoutException as e:

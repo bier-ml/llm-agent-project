@@ -5,18 +5,17 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+
 class CoinPriceService:
     def __init__(self, base_url="https://api.coingecko.com/api/v3"):
         self.base_url = base_url
         logger.info("CoinPriceService initialized")
 
-    def get_coin_price_history(
-        self, coin_id: str, vs_currency: str = "usd", days: int = 30
-    ) -> pd.DataFrame:
+    def get_coin_price_history(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> pd.DataFrame:
         logger.info(f"Fetching price history for {coin_id} in {vs_currency} for {days} days")
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
         params = {"vs_currency": vs_currency, "days": days, "interval": "daily"}
-        
+
         try:
             response = requests.get(url, params=params)
             if response.status_code != 200:

@@ -21,10 +21,7 @@ def test_generate_tool_description_no_args():
         pass
 
     result = generate_tool_description([no_args_function])
-    expected = (
-        "[1] no_args_function: Function with no arguments.\n"
-        "Signature: no_args_function(no arguments) -> bool"
-    )
+    expected = "[1] no_args_function: Function with no arguments.\n" "Signature: no_args_function(no arguments) -> bool"
     assert result == expected
 
 

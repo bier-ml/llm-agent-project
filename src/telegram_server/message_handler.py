@@ -16,6 +16,7 @@ class MessageHandler:
             ButtonText.ANALYZE: command_registry.analyze,
             ButtonText.RECOMMEND: command_registry.recommend,
         }
+
     async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
         user_id = update.effective_user.id
@@ -32,9 +33,5 @@ class MessageHandler:
             content=text,
             metadata={"chat_id": chat_id},
         )
-        response = await self.connector.send_request(
-            "process_message", message.__dict__
-        )
-        await update.message.reply_text(
-            response["message"], reply_markup=self.command_registry.markup
-        )
+        response = await self.connector.send_request("process_message", message.__dict__)
+        await update.message.reply_text(response["message"], reply_markup=self.command_registry.markup)

@@ -4,6 +4,7 @@ from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
+
 class ClientServiceConnector:
     def __init__(self, base_url: str):
         self.base_url = base_url
@@ -11,8 +12,8 @@ class ClientServiceConnector:
         self.timeout_settings = httpx.Timeout(
             timeout=3000.0,  # 3000 seconds total
             connect=1000.0,  # 1000 seconds for connecting
-            read=2000.0,    # 2000 seconds for reading
-            write=1000.0    # 1000 seconds for writing
+            read=2000.0,  # 2000 seconds for reading
+            write=1000.0,  # 1000 seconds for writing
         )
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
