@@ -71,7 +71,7 @@ class JsonProcessor(BaseLLMProcessor):
             # Remove markdown code block markers if present
             cleaned_content = content.replace(
                 "```json", "").replace("```", "").strip()
-            parsed_content = "{}"
+            parsed_content = {}
             # Extract the JSON object between the first '{' and the last '}'
             start = cleaned_content.find("{")
             end = cleaned_content.rfind("}") + 1  # Include the closing '}'
@@ -80,16 +80,23 @@ class JsonProcessor(BaseLLMProcessor):
                 try:
                     parsed_content = json.loads(json_string)
                 except json.JSONDecodeError as e:
-                    raise ValueError(f"Invalid JSON content: {e}")
+                    logger.error(f"Failed to parse JSON content: {str(e)}")
+                    return {
+                        "thought": "I apologize, but I couldn't parse the response format correctly.",
+                        "actions": []
+                    }
             else:
-                raise ValueError("No JSON object found in the content")
+                logger.error("No JSON object found in the content")
+                return {
+                    "thought": "I apologize, but I couldn't parse the response format correctly.",
+                    "actions": []
+                }
 
-            print(parsed_content)
             return {
                 "thought": parsed_content.get("thought", ""),
                 "actions": parsed_content.get("actions", [])
             }
-        except json.JSONDecodeError as e:
+        except Exception as e:
             logger.error(f"Failed to parse JSON content: {str(e)}")
             return {
                 "thought": "I apologize, but I couldn't parse the response format correctly.",
