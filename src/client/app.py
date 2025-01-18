@@ -4,8 +4,10 @@ import asyncio
 import logging
 import os
 from typing import Any, Dict
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from tortoise import Tortoise
 
 from src.client.services import (
     AgentServiceConnector,
@@ -13,28 +15,77 @@ from src.client.services import (
     TelegramServiceConnector,
 )
 from src.common.interfaces import Message
+from src.common.models import User
 from src.telegram_server.telegram_bot import IvanTelegramBot
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()
+    yield
+    # Shutdown
+    await Tortoise.close_connections()
+
+app = FastAPI(lifespan=lifespan)
+
+# Tortoise ORM config
+TORTOISE_ORM = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            "credentials": {
+                "host": os.getenv("POSTGRES_HOST", "postgres"),
+                "port": int(os.getenv("POSTGRES_PORT", "5432")),
+                "user": os.getenv("POSTGRES_USER", "ivan"),
+                "password": os.getenv("POSTGRES_PASSWORD", "ivan"),
+                "database": os.getenv("POSTGRES_DB", "ivan_db"),
+            }
+        }
+    },
+    "apps": {
+        "models": {
+            "models": ["src.common.models"],
+            "default_connection": "default",
+        }
+    }
+}
 
 
 class ClientService:
     def __init__(self):
-        self.agent_connector = AgentServiceConnector(base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
+        self.agent_connector = AgentServiceConnector(
+            base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
         self.telegram_connector = TelegramServiceConnector(
-            base_url=os.getenv("TELEGRAM_SERVICE_URL", "http://telegram_bot:8002")
+            base_url=os.getenv("TELEGRAM_SERVICE_URL",
+                               "http://telegram_bot:8002")
         )
         self.tool_handler = ToolCallHandler()
         self.logger = logging.getLogger(__name__)
         self.last_news_state = None
 
+        # Initialize Tortoise-ORM
+        asyncio.create_task(self.init_db())
+
+    async def init_db(self):
+        """Initialize database connection with Tortoise-ORM."""
+        try:
+            await Tortoise.init(config=TORTOISE_ORM)
+            self.logger.info("Successfully initialized Tortoise-ORM")
+        except Exception as e:
+            self.logger.error(
+                f"Failed to initialize database connection: {str(e)}")
+            raise
+
     def _format_results_message(self, results: list, original_message: str) -> str:
         """Format results into a human-readable message for the agent."""
-        results_text = "\n".join(f"- For action '{result.get('type', 'unknown')}': {result}" for result in results)
+        results_text = "\n".join(
+            f"- For action '{result.get('type', 'unknown')}': {result}" for result in results)
 
         return (
             f"I've gathered the information you requested. Here are the results:\n\n"
@@ -46,6 +97,10 @@ class ClientService:
     async def process_message(self, message: Message) -> Dict[str, Any]:
         self.logger.info(f"Processing message: {message}")
         try:
+            # Check if message is portfolio-related
+            if "portfolio" in message.content.lower():
+                return await self.check_portfolio(message)
+
             current_context = {
                 "content": message.content,
                 "user_id": message.user_id,
@@ -53,54 +108,91 @@ class ClientService:
                 "metadata": message.metadata,
             }
 
-            while True:
-                # Get next action from agent
-                response = await self.agent_connector.send_request("process", current_context)
-                self.logger.info(f"Received response from agent: {response}")
-
-                if not isinstance(response, dict):
-                    return {"error": "Invalid response format from agent"}
-
-                thought = response.get("thought", "")
-                actions = response.get("actions", [])
-
-                # If no actions or response_to_user, return the thought to user
-                if not actions or (len(actions) == 1 and actions[0]["name"] == "response_to_user"):
-                    if actions and actions[0]["name"] == "response_to_user":
-                        return {"message": actions[0].get("argument", "")}
-                    return {"message": thought}
-
-                # Execute the actions and collect results
-                results = []
-                for action in actions:
-                    tool_call = {
-                        "type": action["name"],
-                        **(
-                            action.get("argument", {})
-                            if isinstance(action.get("argument"), dict)
-                            else {"coin_id": action.get("argument", "")}
-                        ),
-                    }
-                    result = await self.tool_handler.handle(tool_call)
-                    results.append(result)
-
-                # Create human-readable message with results
-                results_message = self._format_results_message(
-                    results=results,
-                    original_message=message.content,
-                )
-
-                # Update context with results for next iteration
-                current_context = {
-                    "content": results_message,
-                    "user_id": message.user_id,
-                    "llm_type": message.llm_type,
-                    "metadata": message.metadata,
-                }
+            return await self.call_llm_agent(current_context)
 
         except Exception as e:
             self.logger.error(f"Error processing message: {str(e)}")
             raise
+
+    async def check_portfolio(self, message: Message) -> Dict[str, Any]:
+        """Handle portfolio-related requests."""
+        self.logger.info(f"Checking portfolio for message: {message}")
+
+        try:
+            # Fetch user preferences using Tortoise-ORM
+            user = await User.get_or_none(user_id=message.user_id)
+
+            if not user:
+                return {
+                    "message": "I couldn't find your portfolio preferences. "
+                    "Please set them up first using the /preferences command."
+                }
+
+            # Format the response with user preferences
+            response = (
+                f"Here are your portfolio preferences:\n\n"
+                f"Risk Tolerance: {user.risk_tolerance}\n"
+                f"Investment Goals: {user.investment_goals}\n"
+                f"Preferred Coins: {', '.join(user.preferred_coins) if user.preferred_coins else 'None'}\n\n"
+                f"Would you like to update any of these preferences?"
+            )
+
+            return {"message": response}
+
+        except Exception as e:
+            self.logger.error(
+                f"Error checking portfolio preferences: {str(e)}")
+            return {
+                "message": "Sorry, I encountered an error while checking your portfolio preferences. "
+                "Please try again later."
+            }
+
+    async def call_llm_agent(self, current_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle the LLM agent interaction flow."""
+        while True:
+            # Get next action from agent
+            response = await self.agent_connector.send_request("process", current_context)
+            self.logger.info(f"Received response from agent: {response}")
+
+            if not isinstance(response, dict):
+                return {"error": "Invalid response format from agent"}
+
+            thought = response.get("thought", "")
+            actions = response.get("actions", [])
+
+            # If no actions or response_to_user, return the thought to user
+            if not actions or (len(actions) == 1 and actions[0]["name"] == "response_to_user"):
+                if actions and actions[0]["name"] == "response_to_user":
+                    return {"message": actions[0].get("argument", "")}
+                return {"message": thought}
+
+            # Execute the actions and collect results
+            results = []
+            for action in actions:
+                tool_call = {
+                    "type": action["name"],
+                    **(
+                        action.get("argument", {})
+                        if isinstance(action.get("argument"), dict)
+                        else {"coin_id": action.get("argument", "")}
+                    ),
+                }
+                result = await self.tool_handler.handle(tool_call)
+                results.append(result)
+
+            # Create human-readable message with results
+            results_message = self._format_results_message(
+                results=results,
+                original_message=current_context["content"],
+            )
+
+            # Update context with results for next iteration
+            current_context = {
+                "content": results_message,
+                "user_id": current_context["user_id"],
+                "llm_type": current_context["llm_type"],
+                "metadata": current_context["metadata"],
+            }
 
     async def check_news(self):
         """Periodically check the news and notify the user if anything changed."""
@@ -116,7 +208,8 @@ class ClientService:
                         f"Please analyze what's different from the last news state: "
                         f"'{self.last_news_state}' in comparison to the current news: '{current_news}'. You should analyze the impact that the last state had on the market and how it changed with the last news in place, what might I invest into, what should I hold and what should I avoid? Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
                     )
-                    self.logger.info(f"Sending news change prompt to agent: {prompt}")
+                    self.logger.info(
+                        f"Sending news change prompt to agent: {prompt}")
                     result = await self.agent_connector.send_request(
                         "process",
                         {
@@ -126,8 +219,6 @@ class ClientService:
                         },
                     )
 
-                    logger.warn(result)
-
                     # Extract the 'argument' from the 'actions' list
                     try:
                         result = next(
@@ -136,7 +227,8 @@ class ClientService:
                             if action.get("name") == "response_to_user"
                         )
                     except StopIteration:
-                        raise ValueError("No 'response_to_user' action found in the response")
+                        raise ValueError(
+                            "No 'response_to_user' action found in the response")
 
                     # Send the result via Telegram
                     await self.telegram_connector.send_request(
@@ -151,9 +243,8 @@ class ClientService:
 
             except Exception as e:
                 self.logger.error(f"Error checking news: {str(e)}")
-
-            # Wait for 30 minutes before checking again
-            await asyncio.sleep(60)
+            # Wait for 10 minutes before checking again
+            await asyncio.sleep(600)
 
 
 # Start the periodic news check

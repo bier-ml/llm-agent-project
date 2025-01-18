@@ -25,6 +25,7 @@ python-dotenv = "^1.0.1"
 aiohttp = "^3.10.10"
 langsmith = "^0.2.10"
 psycopg2-binary = "^2.9.10"
+tortoise-orm = {extras = ["asyncpg"], version = "^0.23.0"}
 
 
 [tool.poetry.group.dev.dependencies]
