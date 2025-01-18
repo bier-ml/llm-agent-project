@@ -113,8 +113,8 @@ class ClientService:
                 # Compare with the last news state
                 if self.last_news_state != current_news:
                     prompt = (
-                        f"Please check if anything in the news changed significantly from the last state: "
-                        f"'{self.last_news_state}' to the current news: '{current_news}'. Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
+                        f"Please analyze what's different from the last news state: "
+                        f"'{self.last_news_state}' in comparison to the current news: '{current_news}'. You should analyze the impact that the last state had on the market and how it changed with the last news in place, what might I invest into, what should I hold and what should I avoid? Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
                     )
                     self.logger.info(f"Sending news change prompt to agent: {prompt}")
                     result = await self.agent_connector.send_request(
