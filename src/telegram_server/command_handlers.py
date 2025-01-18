@@ -1,4 +1,5 @@
 from textwrap import dedent
+import logging
 
 from telegram import BotCommand, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -12,6 +13,7 @@ class CommandRegistry:
         self.connector = connector
         self.keyboard = ButtonText.get_keyboard_layout()
         self.markup = ReplyKeyboardMarkup(self.keyboard, resize_keyboard=True)
+        self.logger = logging.getLogger(__name__)
 
         # Define commands for menu button
         self.commands = [
@@ -21,11 +23,18 @@ class CommandRegistry:
             BotCommand("recommend", ButtonText.DESC_RECOMMEND),
         ]
 
+    def _log_command(self, update: Update, command: str):
+        """Helper method to log command usage"""
+        user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
+        self.logger.info(f"Command '{command}' used by user_id={user_id}, chat_id={chat_id}")
+
     async def setup_commands(self, application):
         """Set up the bot commands in Telegram"""
         await application.bot.set_my_commands(self.commands)
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        self._log_command(update, "start")
         await update.message.reply_text(
             "Hello! I'm IVAN, your Interactive Venture Analysis Network. "
             "I can help you manage your financial portfolio and provide investment recommendations.",
@@ -45,50 +54,41 @@ class CommandRegistry:
         await update.message.reply_text(help_text, reply_markup=self.markup)
 
     async def portfolio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "Fetching your portfolio...", reply_markup=self.markup
-        )
-        response = await self.connector.send_request(
-            "portfolio",
-            {"user_id": update.effective_user.id}
-        )
+        await update.message.reply_text("Fetching your portfolio...", reply_markup=self.markup)
+        response = await self.connector.send_request("portfolio", {"user_id": update.effective_user.id})
         await update.message.reply_text(
             response.get("message", "Failed to fetch portfolio"),
-            reply_markup=self.markup
+            reply_markup=self.markup,
         )
 
     async def analyze(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "Analyzing market conditions...", reply_markup=self.markup
-        )
+        await update.message.reply_text("Analyzing market conditions...", reply_markup=self.markup)
         response = await self.connector.send_request(
             "process_message",
             {
                 "user_id": str(update.effective_user.id),
-                "content": "",
+                "content": "Analyze current market conditions and provide insight into trends",
                 "llm_type": "",
-            }
+            },
         )
         await update.message.reply_text(
             response.get("message", "Failed to analyze market conditions"),
-            reply_markup=self.markup
+            reply_markup=self.markup,
         )
 
     async def recommend(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "Generating investment recommendations...", reply_markup=self.markup
-        )
+        await update.message.reply_text("Generating investment recommendations...", reply_markup=self.markup)
         response = await self.connector.send_request(
             "process_message",
             {
                 "user_id": str(update.effective_user.id),
-                "content": "",
+                "content": "Provide investment recommendations according to the current state of the market trends. As a result give a broad overview of the market based on the latest news and in the end add a list with the recomendation what should be bought and what should be avoided and other recomendations you found useful. While giving recomendation return the brief news summary and make sure that you provide the symbols of the stocks (crypto) you recommend. Recommend only reflecting by the news and not by your own knowledge.",
                 "llm_type": "",
-            }
+            },
         )
         await update.message.reply_text(
             response.get("message", "Failed to generate recommendations"),
-            reply_markup=self.markup
+            reply_markup=self.markup,
         )
 
     async def menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

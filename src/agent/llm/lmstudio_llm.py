@@ -23,9 +23,7 @@ class LMStudioProcessor(BaseLLMProcessor):
         self.system_prompt = CODE_ACTION_SYSTEM_PROMPT
         self.mock_functions = mock_functions or []
 
-    async def _create_chat_completion(
-        self, messages: List[Dict[str, str]], temperature: float = 0.7
-    ) -> str:
+    async def _create_chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> str:
         """Create a chat completion using LM Studio's API."""
         try:
             async with aiohttp.ClientSession() as session:
@@ -45,9 +43,7 @@ class LMStudioProcessor(BaseLLMProcessor):
         except Exception as e:
             raise Exception(f"Error in LM Studio processing: {str(e)}")
 
-    def _format_message_history(
-        self, message: Message, chat_history: Optional[list] = None
-    ) -> List[Dict[str, str]]:
+    def _format_message_history(self, message: Message, chat_history: Optional[list] = None) -> List[Dict[str, str]]:
         """Format the message and chat history for the LLM."""
         messages = [{"role": "system", "content": self.system_prompt}]
 
@@ -61,9 +57,7 @@ class LMStudioProcessor(BaseLLMProcessor):
         """Parse the action block to extract function name and parameters."""
         try:
             # Find content between Action: and End Action
-            action_match = re.search(
-                r"Action:\s*(.*?)\s*End Action", content, re.DOTALL
-            )
+            action_match = re.search(r"Action:\s*(.*?)\s*End Action", content, re.DOTALL)
             if not action_match:
                 return {}
 
@@ -149,9 +143,7 @@ class LMStudioProcessor(BaseLLMProcessor):
 
     def _extract_thought(self, content: str) -> Optional[str]:
         """Extract the thought from the response content."""
-        thought_match = re.search(
-            r"Thought:(.*?)(?:Action:|Answer:)", content, re.DOTALL
-        )
+        thought_match = re.search(r"Thought:(.*?)(?:Action:|Answer:)", content, re.DOTALL)
         if thought_match:
             return thought_match.group(1).strip()
         return None

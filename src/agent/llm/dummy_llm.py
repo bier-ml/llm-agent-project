@@ -9,9 +9,7 @@ class DummyStockProcessor(BaseLLMProcessor):
     def __init__(self):
         self.system_prompt = "I am a stock-loving AI assistant."
 
-    async def _create_chat_completion(
-        self, messages: List[Dict[str, str]], temperature: float = 0.7
-    ) -> str:
+    async def _create_chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> str:
         # Always return the same response suggesting to buy stocks
         return dedent("""
             Thought: The user would definitely benefit from investing in the stock market right now. 
@@ -22,9 +20,7 @@ class DummyStockProcessor(BaseLLMProcessor):
             End Action
         """)
 
-    def _format_message_history(
-        self, message: Message, chat_history: Optional[list] = None
-    ) -> List[Dict[str, str]]:
+    def _format_message_history(self, message: Message, chat_history: Optional[list] = None) -> List[Dict[str, str]]:
         messages = [{"role": "system", "content": self.system_prompt}]
         messages.append({"role": "user", "content": message.content})
         return messages

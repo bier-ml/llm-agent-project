@@ -1,42 +1,42 @@
+import logging
+
 import pandas as pd
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class CoinPriceService:
     def __init__(self, base_url="https://api.coingecko.com/api/v3"):
         self.base_url = base_url
+        logger.info("CoinPriceService initialized")
 
-    def get_coin_price_history(
-        self, coin_id: str, vs_currency: str = "usd", days: int = 30
-    ) -> pd.DataFrame:
-        """
-        Fetch historical price data for a given id from CoinGecko.
-
-        Args:
-            coin_id (str): Cryptocurrency id (e.g., 'bitcoin').
-            vs_currency (str): Currency to compare against (e.g., 'usd').
-            days (int): Number of days for historical data.
-
-        Returns:
-            pd.DataFrame: DataFrame containing price data.
-        """
+    def get_coin_price_history(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> pd.DataFrame:
+        logger.info(f"Fetching price history for {coin_id} in {vs_currency} for {days} days")
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
         params = {"vs_currency": vs_currency, "days": days, "interval": "daily"}
-        response = requests.get(url, params=params)
-        if response.status_code != 200:
-            raise Exception(f"Error fetching data: {response.status_code}")
 
-        data = response.json()
+        try:
+            response = requests.get(url, params=params)
+            if response.status_code != 200:
+                logger.error(f"Error fetching data: {response.status_code}")
+                raise Exception(f"Error fetching data: {response.status_code}")
 
-        if "prices" in data:
-            prices = data["prices"]
-            df = pd.DataFrame(prices, columns=["timestamp", "price"])
-            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-            df.set_index("timestamp", inplace=True)
-            return df
-        else:
-            print(f"No price data available for {coin_id}.")
-            return pd.DataFrame(columns=["timestamp", "price"])
+            data = response.json()
+
+            if "prices" in data:
+                prices = data["prices"]
+                df = pd.DataFrame(prices, columns=["timestamp", "price"])
+                df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+                df.set_index("timestamp", inplace=True)
+                logger.info(f"Successfully fetched price history for {coin_id}")
+                return df
+            else:
+                logger.warning(f"No price data available for {coin_id}")
+                return pd.DataFrame(columns=["timestamp", "price"])
+        except Exception as e:
+            logger.error(f"Error fetching price history for {coin_id}: {str(e)}")
+            raise
 
 
 if __name__ == "__main__":
