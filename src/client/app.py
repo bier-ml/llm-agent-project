@@ -7,9 +7,14 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
 
-from src.client.services import AgentServiceConnector, ToolCallHandler, TelegramServiceConnector
+from src.client.services import (
+    AgentServiceConnector,
+    ToolCallHandler,
+    TelegramServiceConnector,
+)
 from src.common.interfaces import Message
 from src.telegram_server.telegram_bot import IvanTelegramBot
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,12 +24,9 @@ app = FastAPI()
 
 class ClientService:
     def __init__(self):
-        self.agent_connector = AgentServiceConnector(
-            base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001")
-        )
+        self.agent_connector = AgentServiceConnector(base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
         self.telegram_connector = TelegramServiceConnector(
-            base_url=os.getenv("TELEGRAM_SERVICE_URL",
-                               "http://telegram_bot:8002")
+            base_url=os.getenv("TELEGRAM_SERVICE_URL", "http://telegram_bot:8002")
         )
         self.tool_handler = ToolCallHandler()
         self.logger = logging.getLogger(__name__)
@@ -32,10 +34,7 @@ class ClientService:
 
     def _format_results_message(self, results: list, original_message: str) -> str:
         """Format results into a human-readable message for the agent."""
-        results_text = "\n".join(
-            f"- For action '{result.get('type', 'unknown')}': {result}"
-            for result in results
-        )
+        results_text = "\n".join(f"- For action '{result.get('type', 'unknown')}': {result}" for result in results)
 
         return (
             f"I've gathered the information you requested. Here are the results:\n\n"
@@ -76,7 +75,11 @@ class ClientService:
                 for action in actions:
                     tool_call = {
                         "type": action["name"],
-                        **(action.get("argument", {}) if isinstance(action.get("argument"), dict) else {"coin_id": action.get("argument", "")})
+                        **(
+                            action.get("argument", {})
+                            if isinstance(action.get("argument"), dict)
+                            else {"coin_id": action.get("argument", "")}
+                        ),
                     }
                     result = await self.tool_handler.handle(tool_call)
                     results.append(result)
@@ -113,31 +116,35 @@ class ClientService:
                         f"Please analyze what's different from the last news state: "
                         f"'{self.last_news_state}' in comparison to the current news: '{current_news}'. You should analyze the impact that the last state had on the market and how it changed with the last news in place, what might I invest into, what should I hold and what should I avoid? Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
                     )
-                    self.logger.info(
-                        f"Sending news change prompt to agent: {prompt}")
+                    self.logger.info(f"Sending news change prompt to agent: {prompt}")
                     result = await self.agent_connector.send_request(
                         "process",
-                        {"content": prompt, "user_id": "user1",
-                            "llm_type": "jsonBasedLLM"}
+                        {
+                            "content": prompt,
+                            "user_id": "user1",
+                            "llm_type": "jsonBasedLLM",
+                        },
                     )
 
                     logger.warn(result)
 
                     # Extract the 'argument' from the 'actions' list
                     try:
-                        result = next(action['argument'] for action in result.get(
-                            'actions', []) if action.get('name') == 'response_to_user')
+                        result = next(
+                            action["argument"]
+                            for action in result.get("actions", [])
+                            if action.get("name") == "response_to_user"
+                        )
                     except StopIteration:
-                        raise ValueError(
-                            "No 'response_to_user' action found in the response")
+                        raise ValueError("No 'response_to_user' action found in the response")
 
                     # Send the result via Telegram
                     await self.telegram_connector.send_request(
                         "send_message",
                         {
-                            "chat_id": 258495897,  # TODO: your chat id here; env variable?
-                            "message": result
-                        }
+                            "chat_id": 123,  # TODO: your chat id here; env variable?
+                            "message": result,
+                        },
                     )
                 # Update the last news state
                 self.last_news_state = current_news
