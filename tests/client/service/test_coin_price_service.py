@@ -28,7 +28,7 @@ def test_init():
     assert service.base_url == "https://custom.api.com"
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_get_coin_price_history_success(mock_get, coin_service, mock_response):
     mock_get.return_value = mock_response
 
@@ -41,7 +41,7 @@ def test_get_coin_price_history_success(mock_get, coin_service, mock_response):
     assert df.iloc[0]["price"] == 29000.0
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_get_coin_price_history_error_response(mock_get, coin_service):
     mock_response = Mock()
     mock_response.status_code = 404
@@ -53,7 +53,7 @@ def test_get_coin_price_history_error_response(mock_get, coin_service):
     assert "Error fetching data: 404" in str(exc_info.value)
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_get_coin_price_history_no_data(mock_get, coin_service):
     mock_response = Mock()
     mock_response.status_code = 200

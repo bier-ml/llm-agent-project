@@ -72,14 +72,11 @@ class JsonProcessor(BaseLLMProcessor):
                     logger.error(f"Failed to parse JSON content: {str(e)}")
                     return {
                         "thought": "I apologize, but I couldn't parse the response format correctly.",
-                        "actions": []
+                        "actions": [],
                     }
             else:
                 logger.error("No JSON object found in the content")
-                return {
-                    "thought": "I apologize, but I couldn't parse the response format correctly.",
-                    "actions": []
-                }
+                return {"thought": "I apologize, but I couldn't parse the response format correctly.", "actions": []}
 
             return {
                 "thought": parsed_content.get("thought", ""),

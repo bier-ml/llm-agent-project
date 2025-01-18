@@ -1,19 +1,14 @@
 import psycopg2
 
+
 def verify_database():
     try:
         # Connect to the database
-        conn = psycopg2.connect(
-            dbname="ivan_db",
-            user="ivan",
-            password="ivan",
-            host="localhost",
-            port="5432"
-        )
-        
+        conn = psycopg2.connect(dbname="ivan_db", user="ivan", password="ivan", host="localhost", port="5432")
+
         # Create a cursor
         cur = conn.cursor()
-        
+
         # Get list of all tables
         cur.execute("""
             SELECT table_name 
@@ -21,9 +16,9 @@ def verify_database():
             WHERE table_schema = 'public'
             ORDER BY table_name;
         """)
-        
+
         tables = cur.fetchall()
-        
+
         print("Found tables:")
         for table in tables:
             print(f"- {table[0]}")
@@ -38,15 +33,16 @@ def verify_database():
             for column in columns:
                 print(f"  - {column[0]}: {column[1]}")
             print()
-            
+
     except Exception as e:
         print(f"An error occurred: {e}")
-        
+
     finally:
-        if 'cur' in locals():
+        if "cur" in locals():
             cur.close()
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
 
+
 if __name__ == "__main__":
-    verify_database() 
+    verify_database()

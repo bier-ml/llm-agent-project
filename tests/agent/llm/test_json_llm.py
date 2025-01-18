@@ -31,12 +31,10 @@ async def test_create_chat_completion_success(json_processor):
     with patch("aiohttp.ClientSession.post") as mock_post:
         mock_context = AsyncMock()
         mock_context.__aenter__.return_value.status = 200
-        mock_context.__aenter__.return_value.json = AsyncMock(
-            return_value=mock_response)
+        mock_context.__aenter__.return_value.json = AsyncMock(return_value=mock_response)
         mock_post.return_value = mock_context
 
-        result = await json_processor._create_chat_completion(
-            [{"role": "user", "content": "test"}])
+        result = await json_processor._create_chat_completion([{"role": "user", "content": "test"}])
 
         assert "thought" in result
         assert "actions" in result
@@ -50,8 +48,7 @@ async def test_create_chat_completion_api_error(json_processor):
         mock_post.return_value = mock_context
 
         with pytest.raises(Exception) as exc_info:
-            await json_processor._create_chat_completion(
-                [{"role": "user", "content": "test"}])
+            await json_processor._create_chat_completion([{"role": "user", "content": "test"}])
 
         assert "API returned status code 500" in str(exc_info.value)
 
@@ -70,7 +67,7 @@ def test_format_message_history_with_chat_history(json_processor):
     message = Message(content="test message", user_id="test_user")
     chat_history = [
         {"role": "user", "content": "previous message"},
-        {"role": "assistant", "content": "previous response"}
+        {"role": "assistant", "content": "previous response"},
     ]
 
     formatted = json_processor._format_message_history(message, chat_history)
@@ -139,7 +136,7 @@ async def test_process_message_success(json_processor):
     }
     ```"""
 
-    with patch.object(json_processor, '_create_chat_completion', new_callable=AsyncMock) as mock_completion:
+    with patch.object(json_processor, "_create_chat_completion", new_callable=AsyncMock) as mock_completion:
         mock_completion.return_value = mock_response
 
         result = await json_processor.process_message(Message(content="test", user_id="test_user"))
@@ -151,7 +148,7 @@ async def test_process_message_success(json_processor):
 
 @pytest.mark.asyncio
 async def test_process_message_error(json_processor):
-    with patch.object(json_processor, '_create_chat_completion', new_callable=AsyncMock) as mock_completion:
+    with patch.object(json_processor, "_create_chat_completion", new_callable=AsyncMock) as mock_completion:
         mock_completion.side_effect = Exception("Test error")
 
         result = await json_processor.process_message(Message(content="test", user_id="test_user"))
