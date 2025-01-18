@@ -25,10 +25,12 @@ services:
             - .env
         environment:
             - AGENT_SERVICE_URL=http://llm_agent:8001
+            - DATABASE_URL=postgresql://ivan:ivan@postgres:5432/ivan_db
         ports:
             - "8000:8000"
         depends_on:
             - llm_agent
+            - postgres
         networks:
             - ivan_network
         restart: unless-stopped
@@ -50,6 +52,30 @@ services:
             - ivan_network
         restart: unless-stopped
 
+    postgres:
+        image: postgres:15
+        environment:
+            - POSTGRES_USER=ivan
+            - POSTGRES_PASSWORD=ivan
+            - POSTGRES_DB=ivan_db
+            - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+        networks:
+            - ivan_network
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ivan -d ivan_db"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
 networks:
     ivan_network:
         driver: bridge
+
+volumes:
+    postgres_data:
