@@ -103,6 +103,72 @@ The IVAN Telegram bot serves as an interactive channel for communicating with th
 - **Seamless Integration**: Ensures a smooth user experience by delivering timely and relevant financial insights
   directly in your Telegram app.
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    %% Users
+    Users((Users)) --> TB
+
+    subgraph "Telegram Layer"
+        TB[Telegram Bot]
+        TH[Message Handler]
+        TC[Client Service Connector]
+    end
+
+    subgraph "Client Layer"
+        CS[Client Service]
+        FNS[Financial News Service]
+        CPS[Coin Price Service]
+        AR[Autonomous Recommender]
+        DB[(PostgreSQL DB)]
+    end
+
+    subgraph "Agent Layer"
+        AG[LLM Agent]
+        LMS[LMStudio LLM]
+    end
+
+    subgraph "Common Interfaces"
+        MI((Message Interface))
+        MP((Message Processor))
+        SC((Service Connector))
+    end
+
+    %% Autonomous Flow
+    AR --> FNS
+    AR --> CPS
+    AR --> DB
+    AR --> CS
+    CS --> TB
+
+    %% Regular Flow Connections
+    TB --> TH
+    TH --> TC
+    TC --> CS
+    CS --> FNS
+    CS --> CPS
+    CS --> AG
+    AG --> LMS
+    CS --> DB
+
+    %% Interface Implementations
+    MI -.-> TB
+    MP -.-> TH
+    SC -.-> TC
+
+    %% Styling
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px
+    classDef interface fill:#bbf,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
+    classDef database fill:#85C1E9,stroke:#333,stroke-width:2px
+    classDef users fill:#82E0AA,stroke:#333,stroke-width:2px
+    
+    class TB,TH,TC,CS,FNS,CPS,AG,LMS,AR service
+    class MI,MP,SC interface
+    class DB database
+    class Users users
+```
+
 ## Contributing
 
 We welcome contributions! Please add an issue or pull request if you have an ideas about how we can improve IVAN.
