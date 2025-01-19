@@ -1,14 +1,15 @@
-import os
 import logging
+import os
+from threading import Thread
+
+import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from dotenv import load_dotenv
+from telegram import Bot
 from telegram.ext import (
     Application,
 )
-from telegram import Bot
-import uvicorn
-from threading import Thread
 
 from src.telegram_server.connectors import ClientServiceConnector
 from src.telegram_server.message_handler import MessageHandler
@@ -22,7 +23,7 @@ class MessageRequest(BaseModel):
 class IvanTelegramBot:
     def __init__(self):
         load_dotenv()
-        
+
         logging.basicConfig(level=logging.INFO)  # Add logging configuration
 
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -31,7 +32,7 @@ class IvanTelegramBot:
         self.bot = None
         self.app = FastAPI()
         self.setup_http_endpoints()
-        
+
         logging.info("IvanTelegramBot initialized")  # Log initialization
 
     def setup_http_endpoints(self):

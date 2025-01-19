@@ -28,14 +28,17 @@ class FinancialNewsService:
         try:
             response = self.api.get_everything(q=keywords, language=language, sort_by=sort_by, page_size=page_size)
 
-            if response["status"] == "ok":
-                logger.info(f"Successfully fetched {len(response['articles'])} news articles")
-                return response["articles"]
+            if response and isinstance(response, dict):
+                if response.get("status") == "ok" and "articles" in response:
+                    logger.info(f"Successfully fetched {len(response['articles'])} news articles")
+                    return response["articles"]
+                else:
+                    logger.error(f"Error in API response: {response}")
             else:
-                logger.error(f"Error fetching news: {response['status']}")
-                return []
+                logger.error(f"Invalid response format: {response}")
+            return []
         except Exception as e:
-            logger.error(f"An error occurred while fetching news: {e}")
+            logger.error(f"An error occurred while fetching news: {str(e)}")
             return []
 
     def print_news(self, articles):

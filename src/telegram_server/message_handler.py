@@ -1,9 +1,19 @@
-from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, CallbackQueryHandler, ConversationHandler, CommandHandler, MessageHandler as TelegramMessageHandler, filters
-
-from src.common.interfaces import Message, ServiceConnector
-from src.telegram_server.button_texts import ButtonText
 import logging
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    filters,
+)
+from telegram.ext import (
+    MessageHandler as TelegramMessageHandler,
+)
+
+from src.common.interfaces import ServiceConnector
+from src.telegram_server.button_texts import ButtonText
 
 # Define states for the conversation
 MENU, PORTFOLIO, ANALYZE, RECOMMEND, UPDATE_PORTFOLIO = range(5)
@@ -14,16 +24,15 @@ class MessageHandler:
         self.connector = connector
         self.keyboard = ButtonText.get_keyboard_layout()
         self.menu_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(text, callback_data=text)
-              for text in row] for row in self.keyboard]
+            [[InlineKeyboardButton(text, callback_data=text) for text in row] for row in self.keyboard]
         )
         self.empty_markup = InlineKeyboardMarkup([])
         self.return_to_menu_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(ButtonText.MENU, callback_data=ButtonText.MENU)]])
-        self.confirm_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Yes", callback_data="yes"),
-             InlineKeyboardButton("No", callback_data="no")]
-        ])
+            [[InlineKeyboardButton(ButtonText.MENU, callback_data=ButtonText.MENU)]]
+        )
+        self.confirm_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Yes", callback_data="yes"), InlineKeyboardButton("No", callback_data="no")]]
+        )
         self.logger = logging.getLogger(__name__)
         self.logger.info("MessageHandler initialized")
 
@@ -39,12 +48,13 @@ class MessageHandler:
         return MENU
 
     async def menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        help_text = ("Here are the available commands:\n\n"
-                     "- Portfolio: View your investment portfolio.\n"
-                     "- Analyze: Get an analysis of current market conditions.\n"
-                     "- Recommend: Receive investment recommendations based on market trends.\n\n"
-                     "Please choose an option:"
-                     )
+        help_text = (
+            "Here are the available commands:\n\n"
+            "- Portfolio: View your investment portfolio.\n"
+            "- Analyze: Get an analysis of current market conditions.\n"
+            "- Recommend: Receive investment recommendations based on market trends.\n\n"
+            "Please choose an option:"
+        )
         if update.callback_query:
             await update.callback_query.answer()
             await update.callback_query.message.reply_text(help_text, reply_markup=self.menu_markup)
@@ -74,8 +84,12 @@ class MessageHandler:
             message += "\nWould you like to update these preferences?"
         await update.callback_query.message.reply_text(
             message,
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(ButtonText.UPDATE_PORTFOLIO, callback_data=ButtonText.UPDATE_PORTFOLIO)],
-                                               [InlineKeyboardButton(ButtonText.MENU, callback_data=ButtonText.MENU)]]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton(ButtonText.UPDATE_PORTFOLIO, callback_data=ButtonText.UPDATE_PORTFOLIO)],
+                    [InlineKeyboardButton(ButtonText.MENU, callback_data=ButtonText.MENU)],
+                ]
+            ),
         )
         return UPDATE_PORTFOLIO
 
@@ -112,7 +126,9 @@ class MessageHandler:
         return MENU
 
     async def update_portfolio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.callback_query.message.reply_text("Please write your updated stock preferences in the following format: 'AAPL, TSLA, AMZN, etc.'")
+        await update.callback_query.message.reply_text(
+            "Please write your updated stock preferences in the following format: 'AAPL, TSLA, AMZN, etc.'"
+        )
 
         return PORTFOLIO
 
@@ -154,7 +170,7 @@ class MessageHandler:
 
     def get_conversation_handler(self):
         return ConversationHandler(
-            entry_points=[CommandHandler('start', self.start)],
+            entry_points=[CommandHandler("start", self.start)],
             states={
                 MENU: [CallbackQueryHandler(self.button_click)],
                 PORTFOLIO: [TelegramMessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_portfolio_update)],
@@ -162,5 +178,5 @@ class MessageHandler:
                 RECOMMEND: [CallbackQueryHandler(self.button_click)],
                 UPDATE_PORTFOLIO: [CallbackQueryHandler(self.button_click)],
             },
-            fallbacks=[CommandHandler('menu', self.menu)]
+            fallbacks=[CommandHandler("menu", self.menu)],
         )

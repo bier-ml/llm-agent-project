@@ -1,6 +1,6 @@
-import psycopg2
 import json
-from datetime import datetime
+
+import psycopg2
 
 
 def test_database_connection():

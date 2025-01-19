@@ -1,22 +1,20 @@
-from datetime import datetime
-from typing import Dict, Any
 import asyncio
 import logging
 import os
-from typing import Any, Dict
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Tuple
 
 from fastapi import FastAPI, HTTPException
+from rank_bm25 import BM25Okapi
 from tortoise import Tortoise
 
 from src.client.services import (
     AgentServiceConnector,
-    ToolCallHandler,
     TelegramServiceConnector,
+    ToolCallHandler,
 )
 from src.common.interfaces import Message
 from src.common.models import User
-from src.telegram_server.telegram_bot import IvanTelegramBot
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +30,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await Tortoise.close_connections()
 
+
 app = FastAPI(lifespan=lifespan)
 
 # Tortoise ORM config
@@ -45,7 +44,7 @@ TORTOISE_ORM = {
                 "user": os.getenv("POSTGRES_USER", "ivan"),
                 "password": os.getenv("POSTGRES_PASSWORD", "ivan"),
                 "database": os.getenv("POSTGRES_DB", "ivan_db"),
-            }
+            },
         }
     },
     "apps": {
@@ -53,21 +52,20 @@ TORTOISE_ORM = {
             "models": ["src.common.models"],
             "default_connection": "default",
         }
-    }
+    },
 }
 
 
 class ClientService:
     def __init__(self):
-        self.agent_connector = AgentServiceConnector(
-            base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
+        self.agent_connector = AgentServiceConnector(base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
         self.telegram_connector = TelegramServiceConnector(
-            base_url=os.getenv("TELEGRAM_SERVICE_URL",
-                               "http://telegram_bot:8002")
+            base_url=os.getenv("TELEGRAM_SERVICE_URL", "http://telegram_bot:8002")
         )
         self.tool_handler = ToolCallHandler()
         self.logger = logging.getLogger(__name__)
         self.last_news_state = None
+        self.news_strategy = os.getenv("NEWS_STRATEGY", "original")
 
         # Initialize Tortoise-ORM
         asyncio.create_task(self.init_db())
@@ -78,14 +76,12 @@ class ClientService:
             await Tortoise.init(config=TORTOISE_ORM)
             self.logger.info("Successfully initialized Tortoise-ORM")
         except Exception as e:
-            self.logger.error(
-                f"Failed to initialize database connection: {str(e)}")
+            self.logger.error(f"Failed to initialize database connection: {str(e)}")
             raise
 
     def _format_results_message(self, results: list, original_message: str) -> str:
         """Format results into a human-readable message for the agent."""
-        results_text = "\n".join(
-            f"- For action '{result.get('type', 'unknown')}': {result}" for result in results)
+        results_text = "\n".join(f"- For action '{result.get('type', 'unknown')}': {result}" for result in results)
 
         return (
             f"I've gathered the information you requested. Here are the results:\n\n"
@@ -97,6 +93,9 @@ class ClientService:
     async def process_message(self, message: Message) -> Dict[str, Any]:
         self.logger.info(f"Processing message: {message}")
         try:
+            # Fetch user data for context
+            user, _ = await User.get_or_create(telegram_id=message.user_id)
+
             # Check if message is portfolio-related
             if "update portfolio" in message.content.lower():
                 return await self.update_portfolio(message)
@@ -108,6 +107,7 @@ class ClientService:
                 "user_id": message.user_id,
                 "llm_type": message.llm_type,
                 "metadata": message.metadata,
+                "portfolio": user.portfolio,  # Add portfolio to context
             }
 
             return await self.call_llm_agent(current_context)
@@ -128,15 +128,12 @@ class ClientService:
                 self.logger.info(f"Created new user entry for user_id: {message.user_id}")
 
             # Format the response with user preferences
-            response = (
-                f"Here are your portfolio preferences: {user.portfolio}\n"
-            )
+            response = f"Here are your portfolio preferences: {user.portfolio}\n"
 
             return {"message": response}
 
         except Exception as e:
-            self.logger.error(
-                f"Error checking portfolio preferences: {str(e)}")
+            self.logger.error(f"Error checking portfolio preferences: {str(e)}")
             return {
                 "message": "Sorry, I encountered an error while checking your portfolio preferences. "
                 "Please try again later."
@@ -161,8 +158,7 @@ class ClientService:
             return {"message": "Successfully updated your portfolio preferences."}
 
         except Exception as e:
-            self.logger.error(
-                f"Error updating portfolio preferences: {str(e)}")
+            self.logger.error(f"Error updating portfolio preferences: {str(e)}")
             return {
                 "message": "Sorry, I encountered an error while updating your portfolio preferences. "
                 "Please try again later."
@@ -171,6 +167,15 @@ class ClientService:
     async def call_llm_agent(self, current_context: Dict[str, Any]) -> Dict[str, Any]:
         """Handle the LLM agent interaction flow."""
         while True:
+            # Enhance the prompt with portfolio context if available
+            if current_context.get("portfolio"):
+                portfolio_context = (
+                    f"\nContext: The user's current portfolio contains: {', '.join(current_context['portfolio'])}. "
+                    "Please consider their existing investments when providing recommendations."
+                )
+                if isinstance(current_context["content"], str):
+                    current_context["content"] += portfolio_context
+
             # Get next action from agent
             response = await self.agent_connector.send_request("process", current_context)
             self.logger.info(f"Received response from agent: {response}")
@@ -216,57 +221,183 @@ class ClientService:
             }
 
     async def check_news(self):
-        """Periodically check the news and notify the user if anything changed."""
+        """Periodically check the news and notify users based on configured strategy."""
         while True:
-            await asyncio.sleep(600)
             try:
-                # Fetch current news
                 current_news = await self.tool_handler.handle({"type": "get_news"})
                 self.logger.info(f"Fetched current news: {current_news}")
 
-                # Compare with the last news state
                 if self.last_news_state != current_news:
-                    prompt = (
-                        f"Please analyze what's different from the last news state: "
-                        f"'{self.last_news_state}' in comparison to the current news: '{current_news}'. You should analyze the impact that the last state had on the market and how it changed with the last news in place, what might I invest into, what should I hold and what should I avoid? Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
-                    )
-                    self.logger.info(
-                        f"Sending news change prompt to agent: {prompt}")
-                    result = await self.agent_connector.send_request(
-                        "process",
-                        {
-                            "content": prompt,
-                            "user_id": "user1",
-                            "llm_type": "jsonBasedLLM",
-                        },
-                    )
+                    if self.news_strategy == "bm25":
+                        await self._process_news_bm25(current_news)
+                    else:
+                        await self._process_news_original(current_news)
 
-                    # Extract the 'argument' from the 'actions' list
-                    try:
-                        result = next(
-                            action["argument"]
-                            for action in result.get("actions", [])
-                            if action.get("name") == "response_to_user"
-                        )
-                    except StopIteration:
-                        raise ValueError(
-                            "No 'response_to_user' action found in the response")
-
-                    # Send the result via Telegram
-                    await self.telegram_connector.send_request(
-                        "send_message",
-                        {
-                            "chat_id": 123,  # TODO: your chat id here; env variable?
-                            "message": result,
-                        },
-                    )
-                # Update the last news state
-                self.last_news_state = current_news
+                    self.last_news_state = current_news
 
             except Exception as e:
                 self.logger.error(f"Error checking news: {str(e)}")
-            # Wait for 10 minutes before checking again
-            await asyncio.sleep(600)
+
+            await asyncio.sleep(600)  # Wait for 10 minutes before checking again
+
+    async def _process_news_original(self, current_news: dict):
+        """Original implementation of news processing."""
+        users = await User.all()
+        for user in users:
+            portfolio_context = (
+                f"Given that the user's portfolio contains: {', '.join(user.portfolio)}, "
+                f"please analyze what's different from the last news state: "
+                f"'{self.last_news_state}' in comparison to the current news: '{current_news}'. "
+                f"You should analyze the impact that the last state had on the market and how it changed "
+                f"with the last news in place, specifically considering their current investments. "
+                f"What might they invest into, what should they hold and what should they avoid? "
+                f"Please only provide \"response_to_user\" action with \"message\" with results of your analysis:"
+            )
+
+            self.logger.info(f"Sending personalized news analysis prompt to agent for user {user.telegram_id}")
+            result = await self.agent_connector.send_request(
+                "process",
+                {
+                    "content": portfolio_context,
+                    "user_id": str(user.telegram_id),
+                    "llm_type": "jsonBasedLLM",
+                    "portfolio": user.portfolio,
+                },
+            )
+
+            try:
+                result = next(
+                    action["argument"]
+                    for action in result.get("actions", [])
+                    if action.get("name") == "response_to_user"
+                )
+            except StopIteration:
+                raise ValueError("No 'response_to_user' action found in the response")
+
+            await self.telegram_connector.send_request(
+                "send_message",
+                {
+                    "chat_id": user.telegram_id,
+                    "message": result,
+                },
+            )
+
+    def _calculate_relevance_scores(self, news_content: str, users: List[User]) -> List[Tuple[User, float]]:
+        """Calculate BM25 relevance scores between news and user portfolios."""
+        # Tokenize news content
+        news_tokens = news_content.lower().split()
+
+        # Create corpus from user portfolios
+        corpus = [" ".join(user.portfolio).lower() for user in users]
+
+        # Initialize BM25
+        bm25 = BM25Okapi([doc.split() for doc in corpus])
+
+        # Calculate relevance scores
+        scores = bm25.get_scores(news_tokens)
+
+        # Pair users with their scores
+        user_scores = list(zip(users, scores))
+
+        # Sort by score in descending order
+        return sorted(user_scores, key=lambda x: x[1], reverse=True)
+
+    async def _process_news_bm25(self, current_news: dict):
+        """Process news using BM25 for relevance matching."""
+        # Get all users
+        users = await User.all()
+
+        # Extract text content from news for matching
+        news_content = self._extract_news_content(current_news)
+
+        # Calculate relevance scores
+        relevant_users = self._calculate_relevance_scores(news_content, users)
+
+        # Process only users with relevance score above threshold
+        threshold = 0.1  # Adjust this threshold based on your needs
+        for user, score in relevant_users:
+            if score < threshold:
+                continue
+
+            # Generate personalized analysis for relevant users
+            analysis_prompt = (
+                f"Based on the user's portfolio: {', '.join(user.portfolio)}, "
+                f"and their relevance score of {score:.2f} to the following news: '{current_news}', "
+                f"please provide a targeted analysis of how this news affects their specific investments. "
+                f"Focus on direct impacts to their portfolio assets and potential opportunities or risks. "
+                f"Please only provide \"response_to_user\" action with \"message\" containing your analysis."
+            )
+
+            self.logger.info(
+                f"Sending BM25-filtered news analysis for user {user.telegram_id} " f"with relevance score {score:.2f}"
+            )
+
+            result = await self.agent_connector.send_request(
+                "process",
+                {
+                    "content": analysis_prompt,
+                    "user_id": str(user.telegram_id),
+                    "llm_type": "jsonBasedLLM",
+                    "portfolio": user.portfolio,
+                },
+            )
+
+            try:
+                message = next(
+                    action["argument"]
+                    for action in result.get("actions", [])
+                    if action.get("name") == "response_to_user"
+                )
+            except StopIteration:
+                raise ValueError("No 'response_to_user' action found in the response")
+
+            await self.telegram_connector.send_request(
+                "send_message",
+                {
+                    "chat_id": user.telegram_id,
+                    "message": message,
+                },
+            )
+
+    def _extract_news_content(self, news: dict) -> str:
+        """Extract relevant text content from news dictionary for matching.
+
+        Processes news articles from get_financial_news format, which includes
+        title, description, and content fields for each article.
+        """
+        if not news:
+            return ""
+
+        # Handle list of articles
+        if isinstance(news, list):
+            # Combine all articles into one text
+            article_texts = []
+            for article in news:
+                article_content = []
+                # Extract relevant fields from each article
+                if isinstance(article, dict):
+                    if article.get("title"):
+                        article_content.append(article["title"])
+                    if article.get("description"):
+                        article_content.append(article["description"])
+                    if article.get("content"):
+                        article_content.append(article["content"])
+                article_texts.append(" ".join(article_content))
+            return " ".join(article_texts)
+
+        # Handle single article or unexpected format
+        if isinstance(news, dict):
+            content_parts = []
+            if news.get("title"):
+                content_parts.append(news["title"])
+            if news.get("description"):
+                content_parts.append(news["description"])
+            if news.get("content"):
+                content_parts.append(news["content"])
+            return " ".join(content_parts)
+
+        # Fallback for unexpected formats
+        return str(news)
 
 
 # Start the periodic news check

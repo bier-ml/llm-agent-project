@@ -1,6 +1,6 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
-import json
 
 from src.agent.llm.json_llm import JsonProcessor
 from src.common.interfaces import Message

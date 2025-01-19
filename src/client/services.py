@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict
 
 import httpx
 
@@ -90,7 +90,7 @@ class ToolCallHandler:
                 return result
             except Exception as e:
                 self.logger.error(f"Error handling {tool_type} tool call: {str(e)}")
-                return
+                return {"error": f"Error handling {tool_type} tool call: {str(e)}"}
 
         self.logger.warning(f"Unknown tool type received: {tool_type}")
         return {"error": f"Unknown tool type: {tool_type}"}
@@ -190,7 +190,7 @@ class ToolCallHandler:
 
     async def _handle_user_response(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Handle direct responses to the user."""
-        logger.info("got tool call: " + tool_call)
+        self.logger.info(f"got tool call: {tool_call}")
         message = tool_call.get("message")
         if not message:
             return {"error": "No message provided for user response"}

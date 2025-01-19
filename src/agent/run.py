@@ -4,8 +4,8 @@ from fastapi import FastAPI, HTTPException
 
 from src.agent.llm.base_llm import BaseLLMProcessor
 from src.agent.llm.dummy_llm import DummyStockProcessor
-from src.agent.llm.lmstudio_llm import LMStudioProcessor
 from src.agent.llm.json_llm import JsonProcessor
+from src.agent.llm.lmstudio_llm import LMStudioProcessor
 from src.common.interfaces import Message
 
 app = FastAPI()
