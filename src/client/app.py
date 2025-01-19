@@ -120,20 +120,16 @@ class ClientService:
 
         try:
             # Fetch user preferences using Tortoise-ORM
-            user = await User.get_or_none(user_id=message.user_id)
+            user, created = await User.get_or_create(telegram_id=message.user_id)
 
-            if not user:
-                return {
-                    "message": "I couldn't find your portfolio preferences. "
-                    "Please set them up first using the /preferences command."
-                }
+            if created:
+                self.logger.info(f"Created new user entry for user_id: {message.user_id}")
 
             # Format the response with user preferences
             response = (
                 f"Here are your portfolio preferences:\n\n"
-                f"Risk Tolerance: {user.risk_tolerance}\n"
-                f"Investment Goals: {user.investment_goals}\n"
-                f"Preferred Coins: {', '.join(user.preferred_coins) if user.preferred_coins else 'None'}\n\n"
+                f"User ID: {user.telegram_id}\n"
+                f"Portfolio: {user.portfolio}\n\n"
                 f"Would you like to update any of these preferences?"
             )
 
@@ -197,6 +193,7 @@ class ClientService:
     async def check_news(self):
         """Periodically check the news and notify the user if anything changed."""
         while True:
+            await asyncio.sleep(600)
             try:
                 # Fetch current news
                 current_news = await self.tool_handler.handle({"type": "get_news"})
