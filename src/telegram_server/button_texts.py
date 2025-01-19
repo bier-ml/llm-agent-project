@@ -3,6 +3,7 @@ class ButtonText:
     ANALYZE = "📊 Analyze market"
     RECOMMEND = "💡 Get recommendations"
     MENU = "🔙 Menu"
+    UPDATE_PORTFOLIO = "🔄 Update portfolio"
 
     @classmethod
     def get_keyboard_layout(cls) -> list:

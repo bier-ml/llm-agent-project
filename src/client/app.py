@@ -98,6 +98,8 @@ class ClientService:
         self.logger.info(f"Processing message: {message}")
         try:
             # Check if message is portfolio-related
+            if "update portfolio" in message.content.lower():
+                return await self.update_portfolio(message)
             if "portfolio" in message.content.lower():
                 return await self.check_portfolio(message)
 
@@ -127,10 +129,7 @@ class ClientService:
 
             # Format the response with user preferences
             response = (
-                f"Here are your portfolio preferences:\n\n"
-                f"User ID: {user.telegram_id}\n"
-                f"Portfolio: {user.portfolio}\n\n"
-                f"Would you like to update any of these preferences?"
+                f"Here are your portfolio preferences: {user.portfolio}\n"
             )
 
             return {"message": response}
@@ -140,6 +139,32 @@ class ClientService:
                 f"Error checking portfolio preferences: {str(e)}")
             return {
                 "message": "Sorry, I encountered an error while checking your portfolio preferences. "
+                "Please try again later."
+            }
+
+    async def update_portfolio(self, message: Message) -> Dict[str, Any]:
+        """Handle portfolio update requests."""
+        self.logger.info(f"Updating portfolio for message: {message}")
+
+        try:
+            # Update user preferences using Tortoise-ORM
+            user, created = await User.get_or_create(telegram_id=message.user_id)
+
+            if created:
+                self.logger.info(f"Created new user entry for user_id: {message.user_id}")
+
+            user.portfolio = [item.strip() for item in message.content.split("[")[1].split("]")[0].split(",")]
+            await user.save()
+
+            self.logger.info(f"Updated portfolio for user_id: {message.user_id}")
+
+            return {"message": "Successfully updated your portfolio preferences."}
+
+        except Exception as e:
+            self.logger.error(
+                f"Error updating portfolio preferences: {str(e)}")
+            return {
+                "message": "Sorry, I encountered an error while updating your portfolio preferences. "
                 "Please try again later."
             }
 
