@@ -12,15 +12,16 @@ class MessageHandler:
     def __init__(self, connector: ServiceConnector):
         self.connector = connector
         self.keyboard = ButtonText.get_keyboard_layout()
-        self.markup = InlineKeyboardMarkup(
+        self.menu_markup = InlineKeyboardMarkup(
             [[InlineKeyboardButton(text, callback_data=text) for text in row] for row in self.keyboard]
         )
-
+        self.empty_markup = InlineKeyboardMarkup([])
+        self.return_to_menu_markup = InlineKeyboardMarkup([[InlineKeyboardButton(ButtonText.MENU, callback_data=ButtonText.MENU)]])
+        self.confirm_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("Yes", callback_data="yes"), InlineKeyboardButton("No", callback_data="no")]
+        ])
         self.logger = logging.getLogger(__name__)
         self.logger.info("MessageHandler initialized")
-        self.logger.info(f"Keyboard layout: {self.keyboard}")
-        self.logger.info(f"Markup: {self.markup}")
-
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_text = (
             "Welcome to the Investment Bot! Here are the available commands:\n\n"
@@ -29,7 +30,7 @@ class MessageHandler:
             "- Recommend: Receive investment recommendations based on market trends.\n\n"
             "Please choose an option:"
         )
-        await update.message.reply_text(help_text, reply_markup=self.markup)
+        await update.message.reply_text(help_text, reply_markup=self.menu_markup)
         return MENU
 
     async def menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,13 +42,13 @@ class MessageHandler:
         )
         if update.callback_query:
             await update.callback_query.answer()
-            await update.callback_query.message.reply_text(help_text, reply_markup=self.markup)
+            await update.callback_query.message.reply_text(help_text, reply_markup=self.menu_markup)
         else:
-            await update.message.reply_text(help_text, reply_markup=self.markup)
+            await update.message.reply_text(help_text, reply_markup=self.menu_markup)
         return MENU
 
     async def portfolio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.callback_query.message.reply_text("Fetching your portfolio...")
+        await update.callback_query.message.reply_text("Fetching your portfolio...", reply_markup=self.empty_markup)
         response = await self.connector.send_request(
             "process_message",
             {
@@ -58,12 +59,12 @@ class MessageHandler:
         )
         await update.callback_query.message.reply_text(
             response.get("message", "Failed to fetch portfolio"),
-            reply_markup=self.markup,
+            reply_markup=self.return_to_menu_markup,
         )
-        return ConversationHandler.END
+        return MENU
 
     async def analyze(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.callback_query.message.reply_text("Analyzing market conditions...")
+        await update.callback_query.message.reply_text("Analyzing market conditions...", reply_markup=self.empty_markup)
         response = await self.connector.send_request(
             "process_message",
             {
@@ -74,9 +75,9 @@ class MessageHandler:
         )
         await update.callback_query.message.reply_text(
             response.get("message", "Failed to analyze market conditions"),
-            reply_markup=self.markup,
+            reply_markup=self.return_to_menu_markup,
         )
-        return ConversationHandler.END
+        return MENU
 
     async def recommend(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.message.reply_text("Generating investment recommendations...")
@@ -90,15 +91,15 @@ class MessageHandler:
         )
         await update.callback_query.message.reply_text(
             response.get("message", "Failed to generate recommendations"),
-            reply_markup=self.markup,
+            reply_markup=self.return_to_menu_markup,
         )
-        return ConversationHandler.END
+        return MENU
 
     async def button_click(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         self.logger.info(f"Button clicked: {query.data}")
         await query.answer()
-        await query.message.edit_reply_markup(reply_markup=None)
+        await query.message.edit_reply_markup(reply_markup=self.empty_markup)
         if query.data == ButtonText.PORTFOLIO:
             return await self.portfolio(update, context)
         elif query.data == ButtonText.ANALYZE:
