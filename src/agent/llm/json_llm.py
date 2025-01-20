@@ -58,6 +58,11 @@ class JsonProcessor(BaseLLMProcessor):
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
         """Parse the action block to extract function name and parameters."""
         try:
+            start = "```json"
+            end = "```"
+            if start in content:
+                content = content[content.find(start) + len(start):]
+                content = content[:content.find(end)]
             # Remove markdown code block markers if present
             cleaned_content = content.replace("```json", "").replace("```", "").strip()
             parsed_content = "{}"
@@ -66,17 +71,18 @@ class JsonProcessor(BaseLLMProcessor):
             end = cleaned_content.rfind("}") + 1  # Include the closing '}'
             if start != -1 and end != -1:
                 json_string = cleaned_content[start:end]
+                json_string.replace("\n", " ")
                 try:
                     parsed_content = json.loads(json_string)
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON content: {str(e)}")
                     return {
-                        "thought": "I apologize, but I couldn't parse the response format correctly.",
+                        "thought": f"I apologize, but I couldn't parse the response format correctly. _parse_action_block:\n{json_string}",
                         "actions": [],
                     }
             else:
                 logger.error("No JSON object found in the content")
-                return {"thought": "I apologize, but I couldn't parse the response format correctly.", "actions": []}
+                return {"thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block else", "actions": []}
 
             return {
                 "thought": parsed_content.get("thought", ""),
@@ -85,7 +91,7 @@ class JsonProcessor(BaseLLMProcessor):
         except Exception as e:
             logger.error(f"Failed to parse JSON content: {str(e)}")
             return {
-                "thought": "I apologize, but I couldn't parse the response format correctly.",
+                "thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block except",
                 "actions": [],
             }
 

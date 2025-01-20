@@ -29,9 +29,9 @@ async def test_handle_unknown_tool_type(tool_handler):
 async def test_handle_coin_price(mock_get_price, tool_handler, mock_coin_price_df):
     mock_get_price.return_value = mock_coin_price_df
 
-    result = await tool_handler.handle({"type": "get_coin_price", "coin_id": "bitcoin", "currency": "usd"})
+    result = await tool_handler.handle({"type": "get_coin_price", "coin_symbol": "bitcoin", "currency": "usd"})
 
-    assert result["coin_id"] == "bitcoin"
+    assert result["coin_symbol"] == "bitcoin"
     assert result["price"] == 30000.0
     assert result["currency"] == "usd"
 
@@ -41,9 +41,9 @@ async def test_handle_coin_price(mock_get_price, tool_handler, mock_coin_price_d
 async def test_handle_coin_history(mock_get_history, tool_handler, mock_coin_price_df):
     mock_get_history.return_value = mock_coin_price_df
 
-    result = await tool_handler.handle({"type": "get_coin_history", "coin_id": "bitcoin", "days": 30})
+    result = await tool_handler.handle({"type": "get_coin_history", "coin_symbol": "bitcoin", "days": 30})
 
-    assert result["coin_id"] == "bitcoin"
+    assert result["coin_symbol"] == "bitcoin"
     assert result["current_price"] == 30000.0
     assert result["highest_price"] == 30000.0
     assert result["lowest_price"] == 29000.0

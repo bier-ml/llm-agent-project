@@ -6,6 +6,7 @@ import httpx
 from src.client.service.coin_price_service import CoinPriceService
 from src.client.service.financial_news_service import FinancialNewsService
 from src.common.interfaces import ServiceConnector
+from src.client.service.stock_price_service import StockPriceService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +65,7 @@ class ToolCallHandler:
     def __init__(self):
         self.coin_price_service = CoinPriceService()
         self.news_service = FinancialNewsService()
+        self.stock_price_service = StockPriceService()
         self.logger = logging.getLogger(__name__)
 
     async def handle(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,6 +77,8 @@ class ToolCallHandler:
         handlers = {
             "get_coin_price": self._handle_coin_price,
             "get_coin_history": self._handle_coin_history,
+            "get_stock_price": self._handle_stock_price,
+            "get_stock_history": self._handle_stock_history,
             "get_news": self._handle_news,
             "get_market_news": self._handle_market_news,
             "get_coin_news": self._handle_coin_news,
@@ -97,18 +101,18 @@ class ToolCallHandler:
 
     async def _handle_coin_price(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get current coin price."""
-        coin_id = tool_call.get("coin_id")
+        coin_symbol = tool_call.get("coin_symbol")
         vs_currency = tool_call.get("currency", "usd")
 
-        if not coin_id:
-            return {"error": "No coin_id provided"}
+        if not coin_symbol:
+            return {"error": "No coin_symbol provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(coin_id=coin_id, vs_currency=vs_currency, days=1)
+            df = self.coin_price_service.get_coin_price_history(coin_symbol=coin_symbol, vs_currency=vs_currency, days=1)
             current_price = df.iloc[-1]["price"] if not df.empty else None
 
             return {
-                "coin_id": coin_id,
+                "coin_symbol": coin_symbol,
                 "price": current_price,
                 "currency": vs_currency,
                 "timestamp": df.index[-1].isoformat() if not df.empty else None,
@@ -118,18 +122,18 @@ class ToolCallHandler:
 
     async def _handle_coin_history(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get coin price history."""
-        coin_id = tool_call.get("coin_id")
+        coin_symbol = tool_call.get("coin_symbol")
         vs_currency = tool_call.get("currency", "usd")
         days = tool_call.get("days", 30)
 
-        if not coin_id:
-            return {"error": "No coin_id provided"}
+        if not coin_symbol:
+            return {"error": "No coin_symbol provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(coin_id=coin_id, vs_currency=vs_currency, days=days)
+            df = self.coin_price_service.get_coin_price_history(coin_symbol=coin_symbol, vs_currency=vs_currency, days=days)
 
             return {
-                "coin_id": coin_id,
+                "coin_symbol": coin_symbol,
                 "currency": vs_currency,
                 "days": days,
                 "current_price": df.iloc[-1]["price"] if not df.empty else None,
@@ -141,6 +145,51 @@ class ToolCallHandler:
             }
         except Exception as e:
             return {"error": f"Failed to fetch coin history: {str(e)}"}
+
+    async def _handle_stock_price(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
+        """Get current stock price."""
+        stock_symbol = tool_call.get("coin_symbol")
+
+        if not stock_symbol:
+            return {"error": "No stock_symbol provided"}
+
+        try:
+            df = self.stock_price_service.get_stock_price_history(symbol=stock_symbol, interval="daily", outputsize="compact")
+            current_price = df.iloc[-1]["Close"] if not df.empty else None
+
+            return {
+                "stock_symbol": stock_symbol,
+                "price": current_price,
+                "timestamp": df.index[-1].isoformat() if not df.empty else None,
+            }
+        except Exception as e:
+            return {"error": f"Failed to fetch stock price: {str(e)}"}
+
+    async def _handle_stock_history(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
+        """Get stock price history."""
+        stock_symbol = tool_call.get("stock_symbol")
+        interval = tool_call.get("interval", "daily")
+        outputsize = tool_call.get("outputsize", "compact")
+
+        if not stock_symbol:
+            return {"error": "No stock_symbol provided"}
+
+        try:
+            df = self.stock_price_service.get_stock_price_history(symbol=stock_symbol, interval=interval, outputsize=outputsize)
+
+            return {
+                "stock_symbol": stock_symbol,
+                "interval": interval,
+                "outputsize": outputsize,
+                "current_price": df.iloc[-1]["Close"] if not df.empty else None,
+                "highest_price": df["High"].max() if not df.empty else None,
+                "lowest_price": df["Low"].min() if not df.empty else None,
+                "price_change": (df.iloc[-1]["Close"] - df.iloc[0]["Close"]) if not df.empty else None,
+                "start_date": df.index[0].isoformat() if not df.empty else None,
+                "end_date": df.index[-1].isoformat() if not df.empty else None,
+            }
+        except Exception as e:
+            return {"error": f"Failed to fetch stock history: {str(e)}"}
 
     async def _handle_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get general financial news."""
@@ -167,14 +216,14 @@ class ToolCallHandler:
 
     async def _handle_coin_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get cryptocurrency specific news."""
-        coin_id = tool_call.get("coin_id", "")
+        coin_symbol = tool_call.get("coin_symbol", "")
 
         try:
-            keywords = f"cryptocurrency OR crypto OR {coin_id}"
+            keywords = f"cryptocurrency OR crypto OR {coin_symbol}"
             articles = self.news_service.get_financial_news(keywords=keywords, page_size=5)
 
             return {
-                "coin_id": coin_id,
+                "coin_symbol": coin_symbol,
                 "articles": [
                     {
                         "title": article["title"],
