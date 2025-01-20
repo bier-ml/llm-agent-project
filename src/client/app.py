@@ -200,7 +200,7 @@ class ClientService:
                     **(
                         action.get("argument", {})
                         if isinstance(action.get("argument"), dict)
-                        else {"coin_id": action.get("argument", "")}
+                        else {"coin_symbol": action.get("argument", "")}
                     ),
                 }
                 result = await self.tool_handler.handle(tool_call)

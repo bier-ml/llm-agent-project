@@ -91,13 +91,14 @@ class ToolCallHandler:
                 result = await handler(tool_call)
                 self.logger.info(f"Successfully handled {tool_type} tool call")
                 self.logger.debug(f"Tool call result: {result}")
+                result["type"] = tool_type  # Include the tool type in the response
                 return result
             except Exception as e:
                 self.logger.error(f"Error handling {tool_type} tool call: {str(e)}")
-                return {"error": f"Error handling {tool_type} tool call: {str(e)}"}
+                return {"type": tool_type, "error": f"Error handling {tool_type} tool call: {str(e)}"}
 
         self.logger.warning(f"Unknown tool type received: {tool_type}")
-        return {"error": f"Unknown tool type: {tool_type}"}
+        return {"type": tool_type, "error": f"Unknown tool type: {tool_type}"}
 
     async def _handle_coin_price(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get current coin price."""
@@ -112,13 +113,14 @@ class ToolCallHandler:
             current_price = df.iloc[-1]["price"] if not df.empty else None
 
             return {
+                "type": "get_coin_price",
                 "coin_symbol": coin_symbol,
                 "price": current_price,
                 "currency": vs_currency,
                 "timestamp": df.index[-1].isoformat() if not df.empty else None,
             }
         except Exception as e:
-            return {"error": f"Failed to fetch coin price: {str(e)}"}
+            return {"type": "get_coin_price", "error": f"Failed to fetch coin price: {str(e)}"}
 
     async def _handle_coin_history(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get coin price history."""
@@ -133,6 +135,7 @@ class ToolCallHandler:
             df = self.coin_price_service.get_coin_price_history(coin_symbol=coin_symbol, vs_currency=vs_currency, days=days)
 
             return {
+                "type": "get_coin_history",
                 "coin_symbol": coin_symbol,
                 "currency": vs_currency,
                 "days": days,
@@ -144,7 +147,7 @@ class ToolCallHandler:
                 "end_date": df.index[-1].isoformat() if not df.empty else None,
             }
         except Exception as e:
-            return {"error": f"Failed to fetch coin history: {str(e)}"}
+            return {"type": "get_coin_history", "error": f"Failed to fetch coin history: {str(e)}"}
 
     async def _handle_stock_price(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get current stock price."""
@@ -158,12 +161,13 @@ class ToolCallHandler:
             current_price = df.iloc[-1]["Close"] if not df.empty else None
 
             return {
+                "type": "get_stock_price",
                 "stock_symbol": stock_symbol,
                 "price": current_price,
                 "timestamp": df.index[-1].isoformat() if not df.empty else None,
             }
         except Exception as e:
-            return {"error": f"Failed to fetch stock price: {str(e)}"}
+            return {"type": "get_stock_price", "error": f"Failed to fetch stock price: {str(e)}"}
 
     async def _handle_stock_history(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get stock price history."""
@@ -178,6 +182,7 @@ class ToolCallHandler:
             df = self.stock_price_service.get_stock_price_history(symbol=stock_symbol, interval=interval, outputsize=outputsize)
 
             return {
+                "type": "get_stock_history",
                 "stock_symbol": stock_symbol,
                 "interval": interval,
                 "outputsize": outputsize,
@@ -189,16 +194,16 @@ class ToolCallHandler:
                 "end_date": df.index[-1].isoformat() if not df.empty else None,
             }
         except Exception as e:
-            return {"error": f"Failed to fetch stock history: {str(e)}"}
+            return {"type": "get_stock_history", "error": f"Failed to fetch stock history: {str(e)}"}
 
     async def _handle_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get general financial news."""
         try:
             articles = self.news_service.get_financial_news(keywords="stock OR crypto", page_size=5)
 
-            return {"articles": self.news_service.print_news(articles=articles)}
+            return {"type": "get_news", "articles": self.news_service.print_news(articles=articles)}
         except Exception as e:
-            return {"error": f"Failed to fetch news: {str(e)}"}
+            return {"type": "get_news", "error": f"Failed to fetch news: {str(e)}"}
 
     async def _handle_market_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get stock market specific news."""
@@ -208,11 +213,12 @@ class ToolCallHandler:
             )
 
             return {
+                "type": "get_market_news",
                 "category": "stock_market",
                 "articles": self.news_service.print_news(articles=articles),
             }
         except Exception as e:
-            return {"error": f"Failed to fetch market news: {str(e)}"}
+            return {"type": "get_market_news", "error": f"Failed to fetch market news: {str(e)}"}
 
     async def _handle_coin_news(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Get cryptocurrency specific news."""
@@ -223,6 +229,7 @@ class ToolCallHandler:
             articles = self.news_service.get_financial_news(keywords=keywords, page_size=5)
 
             return {
+                "type": "get_coin_news",
                 "coin_symbol": coin_symbol,
                 "articles": [
                     {
@@ -235,7 +242,7 @@ class ToolCallHandler:
                 ],
             }
         except Exception as e:
-            return {"error": f"Failed to fetch crypto news: {str(e)}"}
+            return {"type": "get_coin_news", "error": f"Failed to fetch crypto news: {str(e)}"}
 
     async def _handle_user_response(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         """Handle direct responses to the user."""
@@ -244,7 +251,7 @@ class ToolCallHandler:
         if not message:
             return {"error": "No message provided for user response"}
 
-        return {"type": "user_response", "message": message}
+        return {"type": "response_to_user", "message": message}
 
 
 class TelegramServiceConnector(ServiceConnector):
