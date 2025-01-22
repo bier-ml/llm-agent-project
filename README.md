@@ -18,23 +18,26 @@ informed recommendations.
 
 ## Features
 
-1. Performance Analysis
-   The agent provides automatic analysis to keep you informed:
+1. Market Data Analysis
+   The system provides comprehensive market data monitoring:
 
-    - **Market Trends**: Analyze market trends and movements.
-    - **News Integration**: Integrate and analyze relevant news affecting stocks and cryptocurrencies.
+    - **Cryptocurrency Tracking**: Real-time and historical cryptocurrency price data via CoinAPI integration
+    - **Stock Market Data**: Historical stock price data through Alpha Vantage API
+    - **News Integration**: Financial news monitoring and analysis via NewsAPI
 
-2. Personalized Recommendations
-   IVAN delivers tailored investment strategies:
+2. Personalized Portfolio Management
+   The system offers portfolio-based features:
 
-    - **Investment Plans**: Generate personalized investment plans.
-    - **Adjustments Suggestions**: Offer suggestions based on performance analytics.
+    - **Portfolio Tracking**: Store and manage user investment portfolios
+    - **News Relevance**: Smart news filtering using BM25 algorithm to deliver portfolio-relevant updates
+    - **Contextual Analysis**: AI-powered analysis considering user's specific portfolio holdings
 
 3. Communication Support
-   Stay updated with automated notifications:
+   Automated communication features:
 
-    - **Routine Updates**: Automate routine updates and notifications to the user.
-    - **Event Reminders**: Remind users of significant market events and deadlines.
+    - **Market Updates**: Periodic news monitoring and automated notifications
+    - **Portfolio-Specific Alerts**: Personalized alerts based on portfolio relevance
+    - **Interactive Queries**: Process user messages and provide contextual responses
 
 ## Usage Examples
 
@@ -169,69 +172,7 @@ The IVAN Telegram bot serves as an interactive channel for communicating with th
 
 ## Architecture Diagram
 
-```mermaid
-graph TB
-    %% Users
-    Users((Users)) --> TB
-
-    subgraph "Telegram Layer"
-        TB[Telegram Bot]
-        TH[Message Handler]
-        TC[Client Service Connector]
-    end
-
-    subgraph "Client Layer"
-        CS[Client Service]
-        FNS[Financial News Service]
-        CPS[Coin Price Service]
-        AR[Autonomous Recommender]
-        DB[(PostgreSQL DB)]
-    end
-
-    subgraph "Agent Layer"
-        AG[LLM Agent]
-        LMS[LMStudio LLM]
-    end
-
-    subgraph "Common Interfaces"
-        MI((Message Interface))
-        MP((Message Processor))
-        SC((Service Connector))
-    end
-
-    %% Autonomous Flow
-    AR --> FNS
-    AR --> CPS
-    AR --> DB
-    AR --> CS
-    CS --> TB
-
-    %% Regular Flow Connections
-    TB --> TH
-    TH --> TC
-    TC --> CS
-    CS --> FNS
-    CS --> CPS
-    CS --> AG
-    AG --> LMS
-    CS --> DB
-
-    %% Interface Implementations
-    MI -.-> TB
-    MP -.-> TH
-    SC -.-> TC
-
-    %% Styling
-    classDef service fill:#f9f,stroke:#333,stroke-width:2px
-    classDef interface fill:#bbf,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
-    classDef database fill:#85C1E9,stroke:#333,stroke-width:2px
-    classDef users fill:#82E0AA,stroke:#333,stroke-width:2px
-    
-    class TB,TH,TC,CS,FNS,CPS,AG,LMS,AR service
-    class MI,MP,SC interface
-    class DB database
-    class Users users
-```
+For detailed information about IVAN's architecture and technical implementation, please refer to our [design documentation](docs/DESIGN.md).
 
 ## Contributing
 
