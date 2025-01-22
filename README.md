@@ -136,42 +136,6 @@ DATABASE_URL=postgresql://ivan:ivan@localhost:5432/ivan_db
 
 *IVAN's architecture consists of three main layers: Telegram Layer for user interaction, Client Layer for business logic, and Agent Layer for LLM integration.*
 
-### Available LLMs
-
-IVAN leverages several advanced LLMs to provide accurate and informed recommendations. Below is a table of currently
-supported LLMs:
-
-<details>
-<summary>⬇️⬇️⬇️ Click to expand the table ⬇️⬇️⬇️</summary>
-
-| Model           | Ready to use | 
-|-----------------|--------------|
-| GPT-4o          | ✅            |
-| Llama 3.2       | 🚧           |
-| Custom IVAN LLM | 🚧           | 
-
-</details>
-
-### 🚧 Agent Memory and Database
-
-To efficiently manage and store user data and market information, IVAN utilizes a robust memory system combined with
-a reliable database.
-
-- **Memory Management**: Uses in-memory storage for real-time analysis and processing.
-- **Database**: Employs PostgreSQL for storing user profiles, portfolio data, and historical market information ensuring
-  data durability and integrity.
-
-### 🚧 Telegram Bot
-
-The IVAN Telegram bot serves as an interactive channel for communicating with the user. Key features include:
-
-- **Real-time Updates**: Receive instant notifications about market changes and recommendations.
-- **User Commands**: Provide a set of commands to query portfolio status and request personalized advice.
-- **Seamless Integration**: Ensures a smooth user experience by delivering timely and relevant financial insights
-  directly in your Telegram app.
-
-## Architecture Diagram
-
 For detailed information about IVAN's architecture and technical implementation, please refer to our [design documentation](docs/DESIGN.md).
 
 ## Contributing
