@@ -1,21 +1,101 @@
 id,title,content,related_symbols,impact
-1,"Tesla Announces Revolutionary New Battery Technology","Tesla unveiled a breakthrough in battery technology, claiming 50% more range and 30% lower production costs. CEO Elon Musk stated this will revolutionize their entire vehicle lineup.",TSLA;RIVN;F,positive
-2,"Apple's iPhone 15 Sales Disappoint in Asian Markets","Initial sales reports from Asian markets indicate iPhone 15 adoption rates are lower than expected, with consumers citing high prices as main concern. Samsung and Xiaomi gain market share.",AAPL;SSNLF,negative
-3,"Microsoft Acquires AI Startup for $5 Billion","Microsoft announces acquisition of leading AI startup Anthropic, strengthening its position in the artificial intelligence race. The news impacts other AI players in the market.",MSFT;GOOGL;NVDA,positive
-4,"Crypto Exchange Binance Faces Regulatory Scrutiny","Major cryptocurrency exchange Binance under investigation by multiple regulators for potential compliance violations. Other exchanges face increased scrutiny.",BNB;COIN,negative
-5,"Amazon Expands Healthcare Initiative","Amazon's healthcare division partners with major hospital chains to provide telehealth services nationwide. Traditional healthcare providers see stock impact.",AMZN;CVS;WBA,positive
-6,"Global Chip Shortage Impacts Gaming Console Production","Sony and Microsoft report continued production challenges due to semiconductor shortages. TSMC announces production capacity increase.",SONY;MSFT;TSM,negative
-7,"New Climate Report Shows Rising Environmental Risks","Latest climate report highlights increasing environmental challenges, but no direct business impact identified.",,neutral
-8,"Bitcoin Surges Past $100,000","Bitcoin reaches all-time high as institutional adoption increases and ETF approval seems likely. Crypto mining stocks soar.",BTC;RIOT;MARA,positive
-9,"Netflix Subscriber Growth Exceeds Expectations","Netflix adds 10 million new subscribers, beating analyst estimates by 40%. Streaming competitors see market pressure.",NFLX;DIS;PARA,positive
-10,"Meta's VR Hardware Sales Plummet","Meta's Reality Labs division reports significant decline in VR headset sales, raising concerns about metaverse strategy.",META,negative
-11,"Local Coffee Shop Chain Expands Operations","Regional coffee shop opens five new locations in metropolitan area.",,neutral
-12,"NVIDIA AI Chip Demand Soars","NVIDIA reports unprecedented demand for AI chips, with order backlog extending into next year. AMD and Intel struggle to compete in AI market.",NVDA;AMD;INTC,positive
-13,"Ethereum Transition to PoS Reduces Energy Usage","Ethereum's successful transition to proof-of-stake cuts energy consumption by 99%. Mining hardware manufacturers see stock decline.",ETH;NVDA;AMD,mixed
-14,"Disney+ Loses Streaming Market Share","Disney+ subscriber growth stalls as competition intensifies in streaming market. Netflix and Amazon Prime gain subscribers.",DIS;NFLX;AMZN,mixed
-15,"Google Cloud Partners with Healthcare Providers","Google Cloud announces partnerships with major healthcare providers for AI-driven diagnostics.",GOOGL,positive
-16,"Weather Events Disrupt Agricultural Production","Severe weather patterns affect crop yields in midwest, but no significant impact on major agricultural companies.",,neutral
-17,"PayPal Introduces Crypto Payment Features","PayPal expands cryptocurrency services, allowing merchants to accept major cryptocurrencies. Block and Coinbase stock rise on industry adoption.",PYPL;SQ;COIN;BTC;ETH,positive
-18,"EV Market Competition Intensifies","Tesla faces increasing competition as Ford and Rivian ramp up production. Battery suppliers see increased demand.",TSLA;F;RIVN;ALB,mixed
-19,"Social Media Privacy Concerns Rise","New report highlights privacy issues across social platforms, but no specific companies named.",,neutral
-20,"Semiconductor Supply Chain Disruption","TSMC production issues affect multiple chip makers and downstream manufacturers.",TSM;NVDA;AMD;INTC,negative
+1,"AMD Launches Next-Gen Gaming Processors","AMD unveils new Ryzen processors with significant performance gains over previous generation, putting pressure on Intel's market share.",AMD;INTC,positive
+2,"NFT Market Collapse Continues","Major NFT collections lose 80% value as crypto winter persists. OpenSea trading volume hits new lows.",COIN;ETH,negative
+3,"SpaceX Wins Major NASA Contract","SpaceX secures $2.9B lunar landing contract, boosting aerospace supplier stocks.",BA;LMT,positive
+4,"DoorDash Expands into European Market","DoorDash announces major European expansion, acquiring local delivery service.",DASH;UBER,positive
+5,"Chipmakers Face New Export Restrictions","US government imposes additional restrictions on semiconductor exports to China.",TSM;NVDA;AMD,negative
+6,"Walmart's AI Investment Pays Off","Walmart reports significant cost savings from AI implementation in supply chain.",WMT;AMZN,positive
+7,"Renewable Energy Credits Boost Solar Stocks","New government incentives drive solar panel demand higher.",SEDG;ENPH,positive
+8,"Twitter Alternative Gains Users","Decentralized social media platform reports user surge, impacting traditional social media stocks.",META;GOOGL,mixed
+9,"Apple Car Project Delays","Apple's autonomous vehicle project faces setbacks, development timeline extended.",AAPL;TSLA,negative
+10,"Starbucks Reports Strong China Sales","Coffee chain's international expansion shows promise in Asian markets.",SBUX,positive
+11,"Gaming Industry Consolidation","Major gaming studio acquisition sparks industry-wide merger speculation.",ATVI;EA;TTWO,positive
+12,"Cloud Computing Costs Rise","Major cloud providers announce price increases due to infrastructure costs.",AMZN;MSFT;GOOGL,mixed
+13,"Cardano Network Upgrade","Cardano blockchain implements significant protocol improvements.",ADA,positive
+14,"GM Battery Plant Investment","General Motors announces $7B investment in EV battery manufacturing.",GM;F;TSLA,positive
+15,"Cybersecurity Breach Impacts Banks","Major financial institutions face cyber attack, boosting security stocks.",CRWD;PANW,mixed
+16,"Drug Trial Success","Breakthrough cancer treatment shows promising results in late-stage trials.",PFE,positive
+17,"Fast Food Automation Push","Restaurant chains invest heavily in AI and robotics.",MCD;YUM,positive
+18,"Copper Price Surge","Mining companies benefit from increased copper demand for EV production.",FCX;BHP,positive
+19,"Quantum Computing Milestone","IBM achieves quantum computing breakthrough, raising industry interest.",IBM;GOOGL,positive
+20,"Social Media Ad Spending Drops","Major brands reduce digital advertising budgets on privacy concerns.",META;SNAP;GOOGL,negative
+21,"Gaming Console Shortage Eases","Sony and Microsoft report improved supply chain for console production.",SONY;MSFT,positive
+22,"Lithium Mining Expansion","Major lithium producers announce capacity increases for EV batteries.",ALB;LAC,positive
+23,"Cloud Gaming Service Shutdown","Google announces closure of Stadia gaming service.",GOOGL;MSFT;NTDOY,negative
+24,"AI Chip Startup Funding","New AI chip manufacturer receives $500M investment, challenging incumbents.",NVDA;AMD,mixed
+25,"Ripple Legal Victory","XRP wins partial victory in SEC case, crypto markets react positively.",XRP;BTC;ETH,positive
+26,"Aviation Recovery Slows","International air travel recovery faces headwinds from fuel costs.",DAL;UAL;LUV,negative
+27,"5G Network Expansion","Telecom companies accelerate 5G rollout in major markets.",VZ;T,positive
+28,"Streaming Service Price Hike","Major streaming platforms announce subscription fee increases.",NFLX;DIS;PARA,mixed
+29,"Virtual Reality Workplace","Meta's workplace VR platform adoption grows among Fortune 500.",META;MSFT,positive
+30,"Solar Panel Tariffs","New import tariffs affect solar panel availability and pricing.",FSLR;SPWR,negative
+31,"AI Language Model Costs","Computing costs for AI language models strain tech company margins.",MSFT;GOOGL;META,negative
+32,"Electric Vehicle Tax Credits","Government extends and expands EV tax credit program.",TSLA;GM;F,positive
+33,"Gaming Microtransaction Regulation","New regulations target gaming industry monetization practices.",EA;ATVI;TTWO,negative
+34,"Autonomous Delivery Expansion","Walmart expands autonomous delivery vehicle testing.",WMT;GOOGL,positive
+35,"Blockchain Supply Chain","Major retailers adopt blockchain for supply chain tracking.",WMT;TGT;IBM,positive
+36,"Chip Manufacturing Investment","Intel announces $20B investment in new semiconductor plants.",INTC;TSM,positive
+37,"Digital Payment Growth","PayPal reports surge in digital payment adoption.",PYPL;SQ,positive
+38,"Cloud Storage Price War","Major cloud providers cut storage prices to gain market share.",AMZN;GOOGL;MSFT,mixed
+39,"Battery Recycling Innovation","New battery recycling technology improves EV sustainability.",TSLA;GM,positive
+40,"Metaverse Land Prices","Virtual real estate values decline in major metaverse platforms.",META;RBLX,negative
+41,"Quantum Computing Investment","Amazon announces major quantum computing research initiative.",AMZN;IBM,positive
+42,"Crypto Mining Ban","China expands cryptocurrency mining restrictions nationwide.",RIOT;MARA;BTC,negative
+43,"AI Healthcare Approval","FDA approves first AI diagnostic tool for medical imaging.",GOOGL;MSFT,positive
+44,"Social Media User Decline","Twitter alternative platforms gain as traditional platforms lose users.",META;SNAP,negative
+45,"Smart Home Integration","Apple expands HomeKit ecosystem with new partnerships.",AAPL;GOOG,positive
+46,"Chip Shortage Recovery","Automotive industry reports improving semiconductor availability.",F;GM;TM,positive
+47,"Cloud Gaming Growth","Microsoft's Xbox Cloud Gaming surpasses subscription targets.",MSFT;SONY,positive
+48,"NFT Gaming Platform","Gaming giant launches NFT marketplace despite market downturn.",SONY;ETH,mixed
+49,"Battery Supply Chain","Tesla secures long-term lithium supply contracts.",TSLA;ALB,positive
+50,"AI Content Moderation","Social media platforms invest in AI content filtering.",META;TWTR,mixed
+51,"Drone Delivery Service","Amazon expands drone delivery to new metropolitan areas.",AMZN,positive
+52,"Crypto Exchange Merger","Major cryptocurrency exchanges announce consolidation.",COIN;BNB,mixed
+53,"AR Glasses Launch","Apple's mixed reality headset faces production delays.",AAPL;META,negative
+54,"Gene Therapy Breakthrough","Biotech firm announces successful gene therapy trials.",PFE;MRNA,positive
+55,"Mobile Gaming Revenue","Mobile game spending decreases post-pandemic.",EA;ATVI,negative
+56,"Green Energy Storage","New battery technology promises improved grid storage.",TSLA;GE,positive
+57,"Semiconductor Export Controls","New regulations affect chip sales to Chinese market.",NVDA;AMD;INTC,negative
+58,"Digital Banking Growth","Fintech startups gain market share from traditional banks.",SQ;PYPL,positive
+59,"Space Tourism Setback","Virgin Galactic postpones commercial flights.",SPCE;BA,negative
+60,"AI Processor Demand","Server farms struggle to meet AI computing demand.",NVDA;AMD,positive
+61,"Crypto Lending Crisis","Major crypto lending platform faces liquidity issues.",COIN;BTC,negative
+62,"Smart City Initiative","Tech companies partner for urban infrastructure projects.",CSCO;IBM,positive
+63,"Gaming Studio Acquisition","Sony acquires independent game developer.",SONY;MSFT,positive
+64,"EV Charging Network","Tesla opens Supercharger network to other manufacturers.",TSLA;CHPT,positive
+65,"Cloud Security Breach","Major cloud provider reports significant data breach.",AMZN;MSFT,negative
+66,"Robotic Automation","Manufacturing sector increases robotics investment.",ABB;ROK,positive
+67,"Digital Currency Pilot","Central bank announces digital currency testing.",PYPL;V;MA,mixed
+68,"Social Commerce Growth","Instagram shopping features drive e-commerce growth.",META;SHOP,positive
+69,"Quantum Encryption","Quantum-safe encryption standards affect cybersecurity.",IBM;CRWD,positive
+70,"Battery Production Scale","EV battery manufacturer expands production capacity.",TSLA;GM,positive
+71,"Gaming Subscription Service","PlayStation launches expanded game subscription service.",SONY;MSFT,positive
+72,"AI Translation Tool","New AI language translation tool challenges incumbents.",GOOGL;META,mixed
+73,"Crypto Payment Integration","Major retailer accepts cryptocurrency payments.",WMT;BTC,positive
+74,"Cloud Gaming Partnership","Netflix enters gaming market through cloud partnership.",NFLX;MSFT,positive
+75,"Solar Technology Advance","New solar cell efficiency record announced.",ENPH;SEDG,positive
+76,"Autonomous Vehicle Testing","Waymo expands self-driving car testing to new cities.",GOOGL;TSLA,positive
+77,"Metaverse Investment Cut","Companies reduce metaverse development funding.",META;RBLX,negative
+78,"Chip Design Innovation","ARM announces new processor architecture.",NVDA;AAPL,positive
+79,"Digital Health Platform","Healthcare providers adopt new telehealth solution.",TDOC;AMZN,positive
+80,"Web3 Development","Ethereum developer activity reaches new high.",ETH;BTC,positive
+81,"VR Gaming Partnership","Sony and Meta announce VR gaming collaboration.",SONY;META,positive
+82,"AI Regulation Impact","New AI regulations affect tech company operations.",MSFT;GOOGL;META,negative
+83,"Crypto Market Recovery","Bitcoin reaches six-month high amid institutional buying.",BTC;COIN;MARA,positive
+84,"Electric Aircraft Development","Aviation startups secure funding for electric planes.",BA;JOBY,positive
+85,"Cloud Cost Optimization","Enterprises report significant cloud computing savings.",AMZN;MSFT;GOOGL,mixed
+86,"Gaming Hardware Shortage","Nintendo reports continued Switch production issues.",NTDOY;AMD,negative
+87,"Digital Identity Platform","Blockchain-based identity solution gains adoption.",IBM;ETH,positive
+88,"EV Battery Recycling","New facility opens for electric vehicle battery recycling.",TSLA;GM;F,positive
+89,"AI Chip Competition","Intel launches dedicated AI processor line.",INTC;NVDA;AMD,mixed
+90,"Social Media Privacy","New privacy features impact advertising effectiveness.",META;SNAP;GOOGL,negative
+91,"Quantum Computing Success","Quantum computer achieves error correction milestone.",IBM;GOOGL,positive
+92,"Renewable Energy Grid","Solar and wind projects exceed installation targets.",ENPH;SEDG;NEE,positive
+93,"Mobile Payment Growth","Apple Pay transaction volume hits record high.",AAPL;PYPL;SQ,positive
+94,"Gaming Engine Update","Unity announces major platform improvements.",U;RBLX,positive
+95,"Datacenter Expansion","Cloud providers accelerate datacenter construction.",AMZN;MSFT;GOOGL,positive
+96,"Crypto Mining Efficiency","New mining hardware improves energy efficiency.",RIOT;MARA;BTC,positive
+97,"AR Retail Implementation","Major retailers adopt augmented reality shopping.",WMT;AMZN,positive
+98,"Semiconductor Supply Chain","New chip manufacturing plants begin production.",TSM;INTC;AMAT,positive
+99,"Digital Entertainment Merger","Streaming service consolidation announced.",NFLX;DIS;PARA,mixed
+100,"Smart Grid Technology","Utilities implement AI-driven power management.",NEE;DUK,positive
