@@ -5,8 +5,8 @@ import httpx
 
 from src.client.service.coin_price_service import CoinPriceService
 from src.client.service.financial_news_service import FinancialNewsService
-from src.common.interfaces import ServiceConnector
 from src.client.service.stock_price_service import StockPriceService
+from src.common.interfaces import ServiceConnector
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -109,7 +109,9 @@ class ToolCallHandler:
             return {"error": "No coin_symbol provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(coin_symbol=coin_symbol, vs_currency=vs_currency, days=1)
+            df = self.coin_price_service.get_coin_price_history(
+                coin_symbol=coin_symbol, vs_currency=vs_currency, days=1
+            )
             current_price = df.iloc[-1]["price"] if not df.empty else None
 
             return {
@@ -132,7 +134,9 @@ class ToolCallHandler:
             return {"error": "No coin_symbol provided"}
 
         try:
-            df = self.coin_price_service.get_coin_price_history(coin_symbol=coin_symbol, vs_currency=vs_currency, days=days)
+            df = self.coin_price_service.get_coin_price_history(
+                coin_symbol=coin_symbol, vs_currency=vs_currency, days=days
+            )
 
             return {
                 "type": "get_coin_history",
@@ -157,7 +161,9 @@ class ToolCallHandler:
             return {"error": "No stock_symbol provided"}
 
         try:
-            df = self.stock_price_service.get_stock_price_history(symbol=stock_symbol, interval="daily", outputsize="compact")
+            df = self.stock_price_service.get_stock_price_history(
+                symbol=stock_symbol, interval="daily", outputsize="compact"
+            )
             current_price = df.iloc[-1]["Close"] if not df.empty else None
 
             return {
@@ -179,7 +185,9 @@ class ToolCallHandler:
             return {"error": "No stock_symbol provided"}
 
         try:
-            df = self.stock_price_service.get_stock_price_history(symbol=stock_symbol, interval=interval, outputsize=outputsize)
+            df = self.stock_price_service.get_stock_price_history(
+                symbol=stock_symbol, interval=interval, outputsize=outputsize
+            )
 
             return {
                 "type": "get_stock_history",

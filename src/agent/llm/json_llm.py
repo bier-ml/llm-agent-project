@@ -61,8 +61,8 @@ class JsonProcessor(BaseLLMProcessor):
             start = "```json"
             end = "```"
             if start in content:
-                content = content[content.find(start) + len(start):]
-                content = content[:content.find(end)]
+                content = content[content.find(start) + len(start) :]
+                content = content[: content.find(end)]
             # Remove markdown code block markers if present
             cleaned_content = content.replace("```json", "").replace("```", "").strip()
             parsed_content = "{}"
@@ -82,7 +82,10 @@ class JsonProcessor(BaseLLMProcessor):
                     }
             else:
                 logger.error("No JSON object found in the content")
-                return {"thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block else", "actions": []}
+                return {
+                    "thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block else",
+                    "actions": [],
+                }
 
             return {
                 "thought": parsed_content.get("thought", ""),
