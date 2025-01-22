@@ -5,6 +5,8 @@ suggestions on stocks and cryptocurrencies to buy or sell.
 The agent uses real-time stock changes and news to make
 informed recommendations.
 
+![IVAN Architecture](docs/assets/arch.png)
+
 ## 🗂️ Table of Contents
 
 - [Features](#features)
@@ -131,8 +133,6 @@ DATABASE_URL=postgresql://ivan:ivan@localhost:5432/ivan_db
 ## Under the hood
 
 ### Architecture Overview
-
-![IVAN Architecture](docs/assets/arch.png)
 
 *IVAN's architecture consists of three main layers: Telegram Layer for user interaction, Client Layer for business logic, and Agent Layer for LLM integration.*
 
