@@ -136,7 +136,7 @@ DATABASE_URL=postgresql://ivan:ivan@localhost:5432/ivan_db
 
 *IVAN's architecture consists of three main layers: Telegram Layer for user interaction, Client Layer for business logic, and Agent Layer for LLM integration.*
 
-For detailed information about IVAN's architecture and technical implementation, please refer to our [design documentation](docs/DESIGN.md).
+For detailed information about IVAN's architecture and technical implementation, please refer to our [design documentation](docs/ml_system_design_doc.md).
 
 ## Contributing
 
