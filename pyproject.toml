@@ -35,6 +35,8 @@ pre-commit = "^4.0.1"
 pytest = "^8.3.3"
 pytest-asyncio = "^0.24.0"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 [tool.poetry.group.research.dependencies]
 jupyter = "^1.1.1"
