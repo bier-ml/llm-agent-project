@@ -16,7 +16,6 @@ informed recommendations.
 - [Under the hood](#under-the-hood)
 - [Contributing](#contributing)
 - [License](#license)
-- [Contact](#contact)
 
 ## Features
 
