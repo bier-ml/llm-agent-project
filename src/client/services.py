@@ -14,6 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class AgentServiceConnector(ServiceConnector):
+    """Connector class for communicating with the agent service.
+
+    Handles HTTP requests to the agent service with configurable timeouts
+    and error handling.
+    """
+
     def __init__(self, base_url: str):
         self.base_url = base_url
         self.logger = logging.getLogger(__name__)
@@ -26,7 +32,19 @@ class AgentServiceConnector(ServiceConnector):
         )
 
     async def send_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send request to agent service."""
+        """Send request to agent service endpoint.
+
+        Args:
+            endpoint: API endpoint to call
+            data: Request payload
+
+        Returns:
+            Response data from agent
+
+        Raises:
+            TimeoutError: If request times out
+            RuntimeError: If request fails
+        """
         self.logger.info(f"Sending request to {endpoint} with data: {data}")
         try:
             async with httpx.AsyncClient(timeout=self.timeout_settings) as client:
@@ -62,6 +80,15 @@ class AgentServiceConnector(ServiceConnector):
 
 
 class ToolCallHandler:
+    """Handles various tool calls from the agent service.
+
+    Provides methods for handling different types of tool calls including:
+    - Cryptocurrency price and history queries
+    - Stock price and history queries
+    - News retrieval (general, market, and crypto-specific)
+    - User response handling
+    """
+
     def __init__(self):
         self.coin_price_service = CoinPriceService()
         self.news_service = FinancialNewsService()
@@ -69,7 +96,14 @@ class ToolCallHandler:
         self.logger = logging.getLogger(__name__)
 
     async def handle(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle tool calls from the agent."""
+        """Route tool calls to appropriate handlers based on type.
+
+        Args:
+            tool_call: Dictionary containing tool call details
+
+        Returns:
+            Result of tool call execution
+        """
         tool_type = tool_call.get("type")
         self.logger.info(f"Handling tool call of type: {tool_type}")
         self.logger.debug(f"Tool call data: {tool_call}")

@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class JsonProcessor(BaseLLMProcessor):
+    """
+    LLM processor that handles JSON-formatted responses from the language model.
+    Expects responses to contain structured JSON with 'thought' and 'actions' fields.
+    """
+
     def __init__(self):
         """Initialize JSON format processor."""
         self.base_url = os.getenv("LLM_API_URL", "http://localhost:1234/v1")
@@ -56,7 +61,18 @@ class JsonProcessor(BaseLLMProcessor):
         return messages
 
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
-        """Parse the action block to extract function name and parameters."""
+        """
+        Parse JSON-formatted action blocks from LLM response.
+
+        Handles various JSON formats including markdown-wrapped JSON blocks.
+        Returns a dict with 'thought' and 'actions' keys, with empty lists/strings as fallbacks.
+
+        Args:
+            content (str): Raw response content from LLM
+
+        Returns:
+            Dict containing parsed thought and actions, or error message if parsing fails
+        """
         try:
             start = "```json"
             end = "```"
@@ -108,7 +124,12 @@ class JsonProcessor(BaseLLMProcessor):
             return None
 
     async def process_message(self, message: Message) -> Dict[str, Any]:
-        """Process a message and return the LLM's response."""
+        """
+        Process a message through the LLM and parse its JSON response.
+
+        Handles the complete flow from message formatting to response parsing,
+        with error handling at each step.
+        """
         try:
             logger.info(f"Processing message: {message.content[:50]}...")
             messages = self._format_message_history(message)

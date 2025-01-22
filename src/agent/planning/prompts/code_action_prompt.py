@@ -1,3 +1,8 @@
+"""
+This module defines the prompts and formatting instructions for the code-based action system.
+It provides tools for generating function descriptions and example trajectories for the AI agent.
+"""
+
 import inspect
 from textwrap import dedent
 from typing import List
@@ -6,7 +11,16 @@ from src.agent.planning.prompts.mock_functions import MOCK_FUNCTIONS
 
 
 def generate_tool_description(functions: List[callable]) -> str:
-    """Generates a numbered tool description format from a list of callable functions."""
+    """
+    Generates a numbered tool description format from a list of callable functions.
+
+    Args:
+        functions: List of callable functions to generate descriptions for
+
+    Returns:
+        str: A formatted string containing numbered descriptions of all tools,
+             including their signatures, arguments, and docstrings
+    """
     tool_descriptions = []
 
     for i, func in enumerate(functions, 1):
@@ -35,17 +49,18 @@ FORMATING_INSTRUCTION = dedent("""
     You can use the tools by outputing a block of Python code that invoke the tools.
     You may use for-loops, if-statements, and other Python constructs when necessary.
     Be sure to print the final answer at the end of your code.
-    You should begin your tool invocation with ’Action:’ and end it with ’End Action’.
-    Example: ’Action:
+    You should begin your tool invocation with 'Action:' and end it with 'End Action'.
+    Example: 'Action:
     tool_name(argument_1)
-    End Action’
+    End Action'
                                
     You can optionally express your thoughts using natural language before your action. For
-    example, ’Thought: I want to use tool_name to do something. Action: <your action to
-    call tool_name> End Action’.
-    Note that your output should always contain either ’Action:’ or ’Answer:’, but not both.
-    When you are done, output the result using ’Answer: your answer’
+    example, 'Thought: I want to use tool_name to do something. Action: <your action to
+    call tool_name> End Action'.
+    Note that your output should always contain either 'Action:' or 'Answer:', but not both.
+    When you are done, output the result using 'Answer: your answer'
 """)
+"""Instructions for the AI agent on how to format its responses and use tools."""
 
 # Example of agent trajectory with received observations using actual function signatures
 EXAMPLE_AGENT_TRAJECTORY = dedent("""
@@ -85,6 +100,7 @@ EXAMPLE_AGENT_TRAJECTORY = dedent("""
     Thought: Based on the current price, positive news sentiment, and bullish market analysis, it is advisable to buy AAPL.
     Answer: It is advisable to buy AAPL based on the current price, positive news sentiment, and bullish market analysis.
 """)
+"""Example conversation showing how the agent should interact with tools and provide responses."""
 
 # Use it in the main prompt
 CODE_ACTION_SYSTEM_PROMPT_BASE = dedent("""
@@ -99,6 +115,7 @@ CODE_ACTION_SYSTEM_PROMPT_BASE = dedent("""
 
     {EXAMPLE_AGENT_TRAJECTORY}
 """)
+"""Base template for the system prompt, to be formatted with tool descriptions and instructions."""
 
 CODE_ACTION_SYSTEM_PROMPT = CODE_ACTION_SYSTEM_PROMPT_BASE.format(
     TOOL_DESCRIPTION=generate_tool_description(MOCK_FUNCTIONS),

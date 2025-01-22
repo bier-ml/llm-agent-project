@@ -9,7 +9,20 @@ logger = logging.getLogger(__name__)
 
 
 class StockPriceService:
+    """
+    A service class for fetching stock price data from Alpha Vantage API.
+
+    This service provides methods to retrieve historical price data for various stocks
+    using the Alpha Vantage REST API.
+    """
+
     def __init__(self):
+        """
+        Initialize the StockPriceService.
+
+        Raises:
+            ValueError: If ALPHA_VANTAGE_KEY environment variable is not set.
+        """
         load_dotenv()
         api_key = os.getenv("ALPHA_VANTAGE_KEY")
         if not api_key:
@@ -18,7 +31,22 @@ class StockPriceService:
         self.api_key = api_key
         logger.info("StockPriceService initialized successfully")
 
-    def get_stock_price_history(self, symbol: str, interval: str = "daily", outputsize: str = "compact"):
+    def get_stock_price_history(
+        self, symbol: str, interval: str = "daily", outputsize: str = "compact"
+    ) -> pd.DataFrame:
+        """
+        Fetch historical price data for a specified stock symbol.
+
+        Args:
+            symbol (str): The stock symbol to fetch data for (e.g., 'AAPL' for Apple Inc.).
+            interval (str): The time interval between data points. Options: 'daily' or 'intraday'. Defaults to 'daily'.
+            outputsize (str): Amount of data to retrieve. Options: 'compact' or 'full'. Defaults to 'compact'.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the historical price data with datetime index.
+                        Columns include 'Open', 'High', 'Low', 'Close', and 'Volume'.
+                        Returns empty DataFrame if there's an error.
+        """
         logger.info(f"Fetching stock price history for {symbol} with interval: {interval}")
         url = "https://www.alphavantage.co/query"
         params = {

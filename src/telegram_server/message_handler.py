@@ -20,6 +20,12 @@ MENU, PORTFOLIO, ANALYZE, RECOMMEND, UPDATE_PORTFOLIO = range(5)
 
 
 class MessageHandler:
+    """Handles telegram bot message processing and conversation flow.
+
+    Manages conversation states and button interactions for the telegram bot,
+    routing user inputs to appropriate handlers and maintaining conversation context.
+    """
+
     def __init__(self, connector: ServiceConnector):
         self.connector = connector
         self.keyboard = ButtonText.get_keyboard_layout()
@@ -37,6 +43,15 @@ class MessageHandler:
         self.logger.info("MessageHandler initialized")
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Initialize bot conversation with welcome message and menu options.
+
+        Args:
+            update: Telegram update object
+            context: Telegram context object
+
+        Returns:
+            Next conversation state (MENU)
+        """
         help_text = (
             "Welcome to the Investment Bot! Here are the available commands:\n\n"
             "- Portfolio: View your investment portfolio.\n"
@@ -63,6 +78,18 @@ class MessageHandler:
         return MENU
 
     async def portfolio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle portfolio view request and offer update option.
+
+        Fetches user's portfolio from client service and displays it with
+        options to update or return to menu.
+
+        Args:
+            update: Telegram update object
+            context: Telegram context object
+
+        Returns:
+            Next conversation state
+        """
         await update.callback_query.message.reply_text("Fetching your portfolio...", reply_markup=self.empty_markup)
         response = await self.connector.send_request(
             "process_message",

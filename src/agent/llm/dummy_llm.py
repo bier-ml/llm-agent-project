@@ -6,10 +6,20 @@ from src.common.interfaces import Message
 
 
 class DummyStockProcessor(BaseLLMProcessor):
+    """
+    A mock LLM processor that always returns stock-related advice.
+    Used for testing and development purposes.
+    """
+
     def __init__(self):
+        """Initialize with a stock-focused system prompt."""
         self.system_prompt = "I am a stock-loving AI assistant."
 
     async def _create_chat_completion(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> str:
+        """
+        Returns a fixed response about stock market investment opportunities.
+        Ignores input messages and temperature.
+        """
         # Always return the same response suggesting to buy stocks
         return dedent("""
             Thought: The user would definitely benefit from investing in the stock market right now. 
@@ -26,6 +36,10 @@ class DummyStockProcessor(BaseLLMProcessor):
         return messages
 
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
+        """
+        Returns a fixed response_to_user function call about stock investments.
+        Ignores input content.
+        """
         # Always return the response_to_user function call
         return {
             "function_name": "response_to_user",

@@ -57,6 +57,12 @@ TORTOISE_ORM = {
 
 
 class ClientService:
+    """Main service class handling client-side operations including message processing and news monitoring.
+
+    Manages connections to agent and telegram services, handles tool calls, and processes user messages
+    and portfolio updates. Also implements periodic news checking with different strategies.
+    """
+
     def __init__(self):
         self.agent_connector = AgentServiceConnector(base_url=os.getenv("AGENT_SERVICE_URL", "http://agent:8001"))
         self.telegram_connector = TelegramServiceConnector(
@@ -91,6 +97,17 @@ class ClientService:
         )
 
     async def process_message(self, message: Message) -> Dict[str, Any]:
+        """Process incoming user messages and route them to appropriate handlers.
+
+        Args:
+            message: Message object containing user input and metadata
+
+        Returns:
+            Dict containing response message or error details
+
+        Raises:
+            HTTPException: If processing fails or times out
+        """
         self.logger.info(f"Processing message: {message}")
         try:
             # Fetch user data for context
@@ -117,7 +134,14 @@ class ClientService:
             raise
 
     async def check_portfolio(self, message: Message) -> Dict[str, Any]:
-        """Handle portfolio-related requests."""
+        """Retrieve user's portfolio preferences from database.
+
+        Args:
+            message: Message object containing user ID
+
+        Returns:
+            Dict containing portfolio details or error message
+        """
         self.logger.info(f"Checking portfolio for message: {message}")
 
         try:
@@ -303,7 +327,14 @@ class ClientService:
         return sorted(user_scores, key=lambda x: x[1], reverse=True)
 
     async def _process_news_bm25(self, current_news: dict):
-        """Process news using BM25 for relevance matching."""
+        """Process news using BM25 algorithm to match relevant news to user portfolios.
+
+        Calculates relevance scores between news content and user portfolios using BM25,
+        then sends personalized analysis only to users with high relevance scores.
+
+        Args:
+            current_news: Dictionary containing latest news articles
+        """
         # Get all users
         users = await User.all()
 
@@ -360,10 +391,16 @@ class ClientService:
             )
 
     def _extract_news_content(self, news: dict) -> str:
-        """Extract relevant text content from news dictionary for matching.
+        """Extract text content from news dictionary for relevance matching.
 
-        Processes news articles from get_financial_news format, which includes
-        title, description, and content fields for each article.
+        Handles both single articles and lists of articles, combining title,
+        description and content fields into a single text string.
+
+        Args:
+            news: News dictionary or list of news articles
+
+        Returns:
+            Extracted text content as string
         """
         if not news:
             return ""

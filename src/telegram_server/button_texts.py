@@ -1,4 +1,10 @@
 class ButtonText:
+    """Constants for telegram bot button text and keyboard layouts.
+
+    Provides standardized button text strings and keyboard layout configuration
+    for the telegram bot interface.
+    """
+
     PORTFOLIO = "💼 Portfolio"
     ANALYZE = "📊 Analyze market"
     RECOMMEND = "💡 Get recommendations"

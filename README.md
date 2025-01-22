@@ -50,24 +50,88 @@ Ivan is useful for a variety of financial management activities:
 
 1. Clone the repository.
 
-2. Install dependencies:
+2. Choose one of the installation methods:
 
+### Using Docker (Recommended)
+
+1. Install Docker and Docker Compose on your system
+2. Create a `.env` file with required environment variables
+3. Run the application:
+```bash
+docker compose up -d
+```
+
+This will start all necessary services:
+- Telegram Bot (port 8002)
+- Client API (port 8000)
+- LLM Agent (port 8001)
+- PostgreSQL Database (port 5432)
+
+### Manual Installation
+
+1. Install Poetry:
+```bash
+pip install poetry
+```
+
+2. Install dependencies:
 ```bash
 poetry shell 
 poetry install
 ```
 
+## Prerequisites
+
+Before running IVAN, ensure you have one of the following LLM servers running:
+
+1. **LM Studio**: Running on port 5001 (default configuration)
+   - Download and install [LM Studio](https://lmstudio.ai/)
+   - Load your preferred model
+   - Start the local server on port 5001
+
+OR
+
+2. **KoboldAI**: Running on port 5001
+   - Set up [KoboldAI](https://github.com/KoboldAI/KoboldAI-Client)
+   - Configure it to run on port 5001
+
 ## How to Use
 
-1. **Profile Setup**: Set up your portfolio profile by providing necessary financial details.
+1. Set up environment variables in `.env` file:
+```env
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+DATABASE_URL=postgresql://ivan:ivan@localhost:5432/ivan_db
+# Other required variables...
+```
 
-2. **Data Analysis**: IVAN will gather and analyze data from market trends and news sources to form recommendations.
+2. Start the services:
+   - If using Docker: `docker compose up -d`
+   - If running manually:
+     ```bash
+     # Terminal 1: Start PostgreSQL (or use existing installation)
+     # Terminal 2: Start LLM Agent
+     uvicorn src.agent.run:app --host 0.0.0.0 --port 8001
+     # Terminal 3: Start Client API
+     uvicorn src.client.app:app --host 0.0.0.0 --port 8000
+     # Terminal 4: Start Telegram Bot
+     python -m src.telegram_server.telegram_bot
+     ```
 
-3. **Receive Recommendations**: Get daily or real-time suggestions on investments to make adjustments to your portfolio.
+3. **Profile Setup**: Set up your portfolio profile by providing necessary financial details.
 
-4. **Track Performance**: Use the visualization tools to monitor the performance of your investments regularly.
+4. **Data Analysis**: IVAN will gather and analyze data from market trends and news sources to form recommendations.
+
+5. **Receive Recommendations**: Get daily or real-time suggestions on investments to make adjustments to your portfolio.
+
+6. **Track Performance**: Use the visualization tools to monitor the performance of your investments regularly.
 
 ## Under the hood
+
+### Architecture Overview
+
+![IVAN Architecture](docs/assets/arch.png)
+
+*IVAN's architecture consists of three main layers: Telegram Layer for user interaction, Client Layer for business logic, and Agent Layer for LLM integration.*
 
 ### Available LLMs
 
