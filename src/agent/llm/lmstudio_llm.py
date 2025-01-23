@@ -11,6 +11,11 @@ from src.common.interfaces import Message
 
 
 class LMStudioProcessor(BaseLLMProcessor):
+    """
+    LLM processor for interfacing with LM Studio's API.
+    Handles function calling with parameter mapping based on provided mock functions.
+    """
+
     def __init__(self, mock_functions: Optional[List[callable]] = None):
         """
         Initialize LMStudio processor.
@@ -54,13 +59,24 @@ class LMStudioProcessor(BaseLLMProcessor):
         return messages
 
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
-        """Parse the action block to extract function name and parameters."""
+        """
+        Parse action blocks to extract function calls and their parameters.
+
+        Uses regex to extract function names and parameters, then attempts to map
+        parameters to function signatures if mock functions are provided.
+
+        Features:
+        - Handles both named and positional parameters
+        - Preserves parameter types (int, float, string)
+        - Maps parameters to function signatures when available
+        """
         try:
-            # Find content between Action: and End Action
+            # Extract content between Action: and End Action markers
             action_match = re.search(r"Action:\s*(.*?)\s*End Action", content, re.DOTALL)
             if not action_match:
                 return {}
 
+            # Parse function name and parameters
             action_code = action_match.group(1).strip()
 
             # Extract function call using regex

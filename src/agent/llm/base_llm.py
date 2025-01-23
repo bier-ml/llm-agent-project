@@ -5,13 +5,26 @@ from src.common.interfaces import Message
 
 
 class CodeAction:
+    """
+    Represents a code action with its associated function calls.
+
+    Attributes:
+        code (str): The actual code content
+        function_calls (List[Dict[str, Any]]): List of function calls parsed from the code
+    """
+
     def __init__(self, code: str, function_calls: List[Dict[str, Any]]):
         self.code = code
         self.function_calls = function_calls
 
 
 class BaseLLMProcessor(ABC):
-    """Abstract base class for LLM processors."""
+    """
+    Abstract base class for LLM processors that handle message processing and function calling.
+
+    This class defines the interface for processing messages through different LLM implementations,
+    including message formatting, completion generation, and response parsing.
+    """
 
     @abstractmethod
     async def process_message(self, message: Message) -> Dict[str, Any]:

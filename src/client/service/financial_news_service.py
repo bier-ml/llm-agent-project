@@ -8,7 +8,20 @@ logger = logging.getLogger(__name__)
 
 
 class FinancialNewsService:
+    """
+    A service class for fetching financial news using NewsAPI.
+
+    This service provides methods to retrieve and format news articles related to
+    stocks, cryptocurrencies, and other financial topics.
+    """
+
     def __init__(self):
+        """
+        Initialize the FinancialNewsService.
+
+        Raises:
+            ValueError: If NEWSAPI_KEY environment variable is not set.
+        """
         load_dotenv()
         api_key = os.getenv("NEWSAPI_KEY")
         if not api_key:
@@ -24,18 +37,35 @@ class FinancialNewsService:
         sort_by="relevancy",
         page_size=5,
     ):
+        """
+        Fetch financial news articles based on specified criteria.
+
+        Args:
+            keywords (str): Search keywords for filtering news. Defaults to "stock OR crypto".
+            language (str): Language of the news articles. Defaults to "en" (English).
+            sort_by (str): Sorting criteria for articles. Options: 'relevancy', 'popularity', 'publishedAt'.
+                          Defaults to "relevancy".
+            page_size (int): Number of articles to retrieve. Defaults to 5.
+
+        Returns:
+            list: A list of dictionaries containing news articles. Each article has 'title',
+                 'description', 'content', and other metadata. Returns empty list if there's an error.
+        """
         logger.info(f"Fetching financial news with keywords: {keywords}")
         try:
             response = self.api.get_everything(q=keywords, language=language, sort_by=sort_by, page_size=page_size)
 
-            if response["status"] == "ok":
-                logger.info(f"Successfully fetched {len(response['articles'])} news articles")
-                return response["articles"]
+            if response and isinstance(response, dict):
+                if response.get("status") == "ok" and "articles" in response:
+                    logger.info(f"Successfully fetched {len(response['articles'])} news articles")
+                    return response["articles"]
+                else:
+                    logger.error(f"Error in API response: {response}")
             else:
-                logger.error(f"Error fetching news: {response['status']}")
-                return []
+                logger.error(f"Invalid response format: {response}")
+            return []
         except Exception as e:
-            logger.error(f"An error occurred while fetching news: {e}")
+            logger.error(f"An error occurred while fetching news: {str(e)}")
             return []
 
     def print_news(self, articles):
@@ -43,7 +73,10 @@ class FinancialNewsService:
         Print the list of news articles and return the output as a string.
 
         Args:
-        - articles: List of news articles with title, description, and url.
+            articles (list): List of news articles with title, description, and url.
+
+        Returns:
+            str: Formatted string containing all articles with titles, descriptions, and content.
         """
         output = []  # Initialize a list to collect output strings
         for idx, article in enumerate(articles, start=1):

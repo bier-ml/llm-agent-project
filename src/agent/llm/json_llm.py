@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import aiohttp
@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class JsonProcessor(BaseLLMProcessor):
+    """
+    LLM processor that handles JSON-formatted responses from the language model.
+    Expects responses to contain structured JSON with 'thought' and 'actions' fields.
+    """
+
     def __init__(self):
         """Initialize JSON format processor."""
         self.base_url = os.getenv("LLM_API_URL", "http://localhost:1234/v1")
@@ -56,8 +61,24 @@ class JsonProcessor(BaseLLMProcessor):
         return messages
 
     def _parse_action_block(self, content: str) -> Dict[str, Any]:
-        """Parse the action block to extract function name and parameters."""
+        """
+        Parse JSON-formatted action blocks from LLM response.
+
+        Handles various JSON formats including markdown-wrapped JSON blocks.
+        Returns a dict with 'thought' and 'actions' keys, with empty lists/strings as fallbacks.
+
+        Args:
+            content (str): Raw response content from LLM
+
+        Returns:
+            Dict containing parsed thought and actions, or error message if parsing fails
+        """
         try:
+            start = "```json"
+            end = "```"
+            if start in content:
+                content = content[content.find(start) + len(start) :]
+                content = content[: content.find(end)]
             # Remove markdown code block markers if present
             cleaned_content = content.replace("```json", "").replace("```", "").strip()
             parsed_content = "{}"
@@ -66,17 +87,21 @@ class JsonProcessor(BaseLLMProcessor):
             end = cleaned_content.rfind("}") + 1  # Include the closing '}'
             if start != -1 and end != -1:
                 json_string = cleaned_content[start:end]
+                json_string.replace("\n", " ")
                 try:
                     parsed_content = json.loads(json_string)
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON content: {str(e)}")
                     return {
-                        "thought": "I apologize, but I couldn't parse the response format correctly.",
+                        "thought": f"I apologize, but I couldn't parse the response format correctly. _parse_action_block:\n{json_string}",
                         "actions": [],
                     }
             else:
                 logger.error("No JSON object found in the content")
-                return {"thought": "I apologize, but I couldn't parse the response format correctly.", "actions": []}
+                return {
+                    "thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block else",
+                    "actions": [],
+                }
 
             return {
                 "thought": parsed_content.get("thought", ""),
@@ -85,7 +110,7 @@ class JsonProcessor(BaseLLMProcessor):
         except Exception as e:
             logger.error(f"Failed to parse JSON content: {str(e)}")
             return {
-                "thought": "I apologize, but I couldn't parse the response format correctly.",
+                "thought": "I apologize, but I couldn't parse the response format correctly. _parse_action_block except",
                 "actions": [],
             }
 
@@ -99,7 +124,12 @@ class JsonProcessor(BaseLLMProcessor):
             return None
 
     async def process_message(self, message: Message) -> Dict[str, Any]:
-        """Process a message and return the LLM's response."""
+        """
+        Process a message through the LLM and parse its JSON response.
+
+        Handles the complete flow from message formatting to response parsing,
+        with error handling at each step.
+        """
         try:
             logger.info(f"Processing message: {message.content[:50]}...")
             messages = self._format_message_history(message)
