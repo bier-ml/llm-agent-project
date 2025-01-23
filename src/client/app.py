@@ -5,7 +5,10 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Tuple
 
 from fastapi import FastAPI, HTTPException
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
 from rank_bm25 import BM25Okapi
+from sentence_transformers import SentenceTransformer
 from tortoise import Tortoise
 
 from src.client.services import (
@@ -67,8 +70,37 @@ class ClientService:
         self.last_news_state = None
         self.news_strategy = os.getenv("NEWS_STRATEGY", "original")
 
+        # Initialize Qdrant client
+        self.qdrant = QdrantClient(host=os.getenv("QDRANT_HOST", "qdrant"), port=6333)
+        # Initialize sentence transformer model
+        self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+
+        # Initialize collections in Qdrant
+        self._init_qdrant_collections()
+
         # Initialize Tortoise-ORM
         asyncio.create_task(self.init_db())
+
+    def _init_qdrant_collections(self):
+        """Initialize Qdrant collections for storing portfolio and news embeddings."""
+        try:
+            # Create collection for portfolios if it doesn't exist
+            self.qdrant.recreate_collection(
+                collection_name="portfolios",
+                vectors_config=models.VectorParams(
+                    size=384,  # Size depends on the encoder model
+                    distance=models.Distance.COSINE,
+                ),
+            )
+
+            # Create collection for news if it doesn't exist
+            self.qdrant.recreate_collection(
+                collection_name="news", vectors_config=models.VectorParams(size=384, distance=models.Distance.COSINE)
+            )
+            self.logger.info("Successfully initialized Qdrant collections")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize Qdrant collections: {str(e)}")
+            raise
 
     async def init_db(self):
         """Initialize database connection with Tortoise-ORM."""
@@ -219,26 +251,6 @@ class ClientService:
                 "llm_type": current_context["llm_type"],
                 "metadata": current_context["metadata"],
             }
-
-    async def check_news(self):
-        """Periodically check the news and notify users based on configured strategy."""
-        while True:
-            try:
-                current_news = await self.tool_handler.handle({"type": "get_news"})
-                self.logger.info(f"Fetched current news: {current_news}")
-
-                if self.last_news_state != current_news:
-                    if self.news_strategy == "bm25":
-                        await self._process_news_bm25(current_news)
-                    else:
-                        await self._process_news_original(current_news)
-
-                    self.last_news_state = current_news
-
-            except Exception as e:
-                self.logger.error(f"Error checking news: {str(e)}")
-
-            await asyncio.sleep(600)  # Wait for 10 minutes before checking again
 
     async def _process_news_original(self, current_news: dict):
         """Original implementation of news processing."""
@@ -398,6 +410,105 @@ class ClientService:
 
         # Fallback for unexpected formats
         return str(news)
+
+    async def _process_news_qdrant(self, current_news: dict):
+        """Process news using Qdrant vector similarity."""
+        users = await User.all()
+
+        # Extract and encode news content
+        news_content = self._extract_news_content(current_news)
+        news_vector = self.encoder.encode(news_content)
+
+        # Store news vector in Qdrant
+        self.qdrant.upsert(
+            collection_name="news",
+            points=[
+                models.PointStruct(
+                    id=hash(news_content),  # Use hash as ID
+                    vector=news_vector.tolist(),
+                    payload={"content": news_content},
+                )
+            ],
+        )
+
+        # Process each user's portfolio
+        for user in users:
+            # Encode user's portfolio
+            portfolio_text = " ".join(user.portfolio)
+            portfolio_vector = self.encoder.encode(portfolio_text)
+
+            # Search for similarity between news and portfolio
+            search_result = self.qdrant.search(collection_name="news", query_vector=portfolio_vector.tolist(), limit=1)
+
+            if not search_result:
+                continue
+
+            similarity_score = search_result[0].score
+            threshold = 0.7  # Adjust this threshold based on your needs
+
+            if similarity_score >= threshold:
+                # Generate personalized analysis for relevant users
+                analysis_prompt = (
+                    f"Based on the user's portfolio: {', '.join(user.portfolio)}, "
+                    f"and their similarity score of {similarity_score:.2f} to the following news: '{current_news}', "
+                    f"please provide a targeted analysis of how this news affects their specific investments. "
+                    f"Focus on direct impacts to their portfolio assets and potential opportunities or risks. "
+                    f"Please only provide \"response_to_user\" action with \"message\" containing your analysis."
+                )
+
+                self.logger.info(
+                    f"Sending Qdrant-filtered news analysis for user {user.telegram_id} "
+                    f"with similarity score {similarity_score:.2f}"
+                )
+
+                result = await self.agent_connector.send_request(
+                    "process",
+                    {
+                        "content": analysis_prompt,
+                        "user_id": str(user.telegram_id),
+                        "llm_type": "jsonBasedLLM",
+                        "portfolio": user.portfolio,
+                    },
+                )
+
+                try:
+                    message = next(
+                        action["argument"]
+                        for action in result.get("actions", [])
+                        if action.get("name") == "response_to_user"
+                    )
+                except StopIteration:
+                    raise ValueError("No 'response_to_user' action found in the response")
+
+                await self.telegram_connector.send_request(
+                    "send_message",
+                    {
+                        "chat_id": user.telegram_id,
+                        "message": message,
+                    },
+                )
+
+    async def check_news(self):
+        """Periodically check the news and notify users based on configured strategy."""
+        while True:
+            try:
+                current_news = await self.tool_handler.handle({"type": "get_news"})
+                self.logger.info(f"Fetched current news: {current_news}")
+
+                if self.last_news_state != current_news:
+                    if self.news_strategy == "bm25":
+                        await self._process_news_bm25(current_news)
+                    elif self.news_strategy == "qdrant":
+                        await self._process_news_qdrant(current_news)
+                    else:
+                        await self._process_news_original(current_news)
+
+                    self.last_news_state = current_news
+
+            except Exception as e:
+                self.logger.error(f"Error checking news: {str(e)}")
+
+            await asyncio.sleep(600)  # Wait for 10 minutes before checking again
 
 
 # Start the periodic news check

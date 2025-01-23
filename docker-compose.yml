@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
     telegram_bot:
         build:
@@ -70,9 +72,21 @@ services:
             timeout: 5s
             retries: 5
 
+    qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+            - "6333:6333"
+            - "6334:6334"
+        volumes:
+            - qdrant_storage:/qdrant/storage
+        networks:
+            - ivan_network
+
 networks:
     ivan_network:
         driver: bridge
 
 volumes:
     postgres_data:
+    qdrant_storage:
+        driver: local
