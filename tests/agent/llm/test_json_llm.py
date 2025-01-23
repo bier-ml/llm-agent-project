@@ -2,13 +2,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.agent.llm.json_llm import JsonProcessor
+from src.agent.llm.xml_llm import XmlProcessor
 from src.common.interfaces import Message
 
 
 @pytest.fixture
-def json_processor():
-    return JsonProcessor()
+def xml_processor():
+    return XmlProcessor()
 
 
 @pytest.mark.asyncio
