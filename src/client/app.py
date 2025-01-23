@@ -245,6 +245,7 @@ class ClientService:
             }
 
     async def check_news(self):
+        await asyncio.sleep(6000)  # Disabled for live features demo
         """Periodically check the news and notify users based on configured strategy."""
         while True:
             try:
@@ -284,7 +285,7 @@ class ClientService:
                 {
                     "content": portfolio_context,
                     "user_id": str(user.telegram_id),
-                    "llm_type": "jsonBasedLLM",
+                    "llm_type": "xmlBasedLLM",
                     "portfolio": user.portfolio,
                 },
             )
@@ -368,7 +369,7 @@ class ClientService:
                 {
                     "content": analysis_prompt,
                     "user_id": str(user.telegram_id),
-                    "llm_type": "jsonBasedLLM",
+                    "llm_type": "xmlBasedLLM",
                     "portfolio": user.portfolio,
                 },
             )
@@ -446,7 +447,7 @@ asyncio.create_task(client_service.check_news())
 async def process_message(message: Message):
     logger.info(f"Received message processing request: {message}")
     try:
-        message.llm_type = "jsonBasedLLM"
+        message.llm_type = "xmlBasedLLM"
 
         response = await client_service.process_message(message)
         logger.info(f"Successfully processed message: {response}")
